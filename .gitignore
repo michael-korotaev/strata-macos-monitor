@@ -1,0 +1,15 @@
+# Build artefacts
+.build/
+dist/
+*.xcodeproj
+*.xcworkspace
+.swiftpm/
+
+# macOS
+.DS_Store
+Icon?
+
+# Editors
+.idea/
+.vscode/
+*.swp
