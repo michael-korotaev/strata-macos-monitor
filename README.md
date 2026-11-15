@@ -133,6 +133,17 @@ swift test               # unit tests (parsing of a real /metrics payload)
 swift scripts/make-icon.swift   # regenerate Resources/AppIcon.icns
 ```
 
+Useful flags:
+
+```bash
+# one-shot metrics snapshot in stdout (diagnostics)
+./dist/StrataMonitor.app/Contents/MacOS/StrataMonitor --dump
+STRATA_ENDPOINT=http://other-host:12388/metrics ... --dump
+
+# start with the settings panel open
+open -a dist/StrataMonitor.app --args --settings
+```
+
 The project has two targets:
 
 - `StrataMonitorKit` — metrics client, JSON parsing, state model and the ru/en
@@ -142,6 +153,10 @@ The project has two targets:
 The menu bar item is drawn with AppKit (`NSStatusItem`) rather than
 `MenuBarExtra`, because a menu bar label has to combine an SF Symbol with a
 monospaced number.
+
+The screenshots in `docs/` are produced by `scripts/clean-screenshot.py`: it
+cuts the popover out of a screen capture and puts it on a clean gradient, so
+no other windows leak into the picture.
 
 ## License
 

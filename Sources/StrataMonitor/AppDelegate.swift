@@ -31,6 +31,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         model.markConnecting()
         updateStatusItem()
         startPolling()
+
+        // Запуск с --settings сразу открывает панель с настройками.
+        if CommandLine.arguments.contains("--settings") {
+            model.showSettings = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
+                self?.openPanel()
+            }
+        }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -77,6 +85,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             popover.performClose(nil)
             return
         }
+        openPanel()
+    }
+
+    private func openPanel() {
         NSApp.activate(ignoringOtherApps: true)
         guard let button = statusItem.button else { return }
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)

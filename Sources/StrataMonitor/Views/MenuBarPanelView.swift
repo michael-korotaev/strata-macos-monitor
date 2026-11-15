@@ -3,7 +3,6 @@ import StrataMonitorKit
 
 struct MenuBarPanelView: View {
     @EnvironmentObject var model: MonitorModel
-    @State private var showSettings = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -11,8 +10,8 @@ struct MenuBarPanelView: View {
             Divider()
             if model.needsSetup {
                 SetupView()
-            } else if showSettings {
-                SettingsView(showSettings: $showSettings)
+            } else if model.showSettings {
+                SettingsView()
             } else if model.detailLevel == .compact {
                 CompactView()
             } else {
@@ -111,9 +110,9 @@ struct MenuBarPanelView: View {
             .help(model.t("action.copy"))
 
             Button {
-                withAnimation { showSettings.toggle() }
+                withAnimation { model.showSettings.toggle() }
             } label: {
-                Image(systemName: showSettings ? "chevron.left" : "gearshape")
+                Image(systemName: model.showSettings ? "chevron.left" : "gearshape")
             }
             .help(model.t("action.settings"))
 

@@ -57,6 +57,8 @@ public final class MonitorModel: ObservableObject {
     @Published public var menubarFormat: MenubarFormat { didSet { persist() } }
     @Published public var detailLevel: DetailLevel { didSet { persist() } }
     @Published public var language: AppLanguage { didSet { persist() } }
+    /// Открыть панель сразу с настройками (ключ --settings при запуске).
+    @Published public var showSettings = false
 
     private enum Key {
         static let endpoint = "endpoint"

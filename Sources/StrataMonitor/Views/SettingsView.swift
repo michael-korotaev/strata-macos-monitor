@@ -3,7 +3,6 @@ import StrataMonitorKit
 
 struct SettingsView: View {
     @EnvironmentObject var model: MonitorModel
-    @Binding var showSettings: Bool
 
     @State private var endpointDraft: String = ""
     @State private var launchAtLogin = false
