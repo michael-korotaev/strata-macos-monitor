@@ -48,7 +48,7 @@
 - **Русский и английский** — язык интерфейса переключается в настройках.
 - **Без зависимостей** — только Swift и SwiftUI, без менеджеров пакетов и без
   рантайма. Приложение — один бинарь ~700 КБ.
-- **Запуск при входе** — опционально, через LaunchAgent.
+- **Запуск при входе** — опционально, через системный список Login Items.
 
 ## Требования
 
@@ -87,7 +87,7 @@ open dist/StrataMonitor.app
 | Интервал опроса | 0.5 с / 1 с / 2 с / 5 с. Сервер хранит историю за 60 сэмплов, поэтому 1 с — хороший дефолт. |
 | В меню-баре | Значок + число, только число или только значок. |
 | Язык интерфейса | Русский или английский. |
-| Запуск при входе | Ставит LaunchAgent в `~/Library/LaunchAgents`. |
+| Запуск при входе | Добавляет приложение в системный список Login Items (API macOS 13+). |
 
 При первом запуске панель сама спросит адрес сервера — руками ничего править не
 нужно.
@@ -133,6 +133,26 @@ swift test                      # тесты (разбор реального о
 ./build.sh                      # сборка + dist/StrataMonitor.app + zip
 swift scripts/make-icon.swift   # перегенерировать Resources/AppIcon.icns
 ```
+
+Полезные ключи запуска:
+
+```bash
+# срез метрик в stdout (диагностика)
+./dist/StrataMonitor.app/Contents/MacOS/StrataMonitor --dump
+STRATA_ENDPOINT=http://other-host:12388/metrics ... --dump
+
+# открыть панель сразу с настройками
+open -a dist/StrataMonitor.app --args --settings
+
+# управление автозапуском из консоли
+./dist/StrataMonitor.app/Contents/MacOS/StrataMonitor --login-item status
+./dist/StrataMonitor.app/Contents/MacOS/StrataMonitor --login-item on
+./dist/StrataMonitor.app/Contents/MacOS/StrataMonitor --login-item off
+```
+
+Приложение работает в единственном экземпляре: повторный запуск (из Finder, из
+дока или пунктом автозапуска) видит блокировку уже запущенного процесса и сразу
+завершается — в меню-баре не появляется второй значок.
 
 В проекте два таргета:
 

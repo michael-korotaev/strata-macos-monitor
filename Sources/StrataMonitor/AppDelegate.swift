@@ -15,11 +15,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var pollTask: Task<Void, Never>?
     private var cancellables: Set<AnyCancellable> = []
 
-    private enum Launch {
-        static let label = "io.github.michael-korotaev.strata-monitor"
-        static let plistName = "io.github.michael-korotaev.strata-monitor.plist"
-    }
-
     // MARK: - Lifecycle
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -27,7 +22,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         buildStatusItem()
         buildPopover()
         observeSettings()
-        refreshLaunchAgentIfNeeded()
+        LoginItem.removeLegacyAgent()
         model.markConnecting()
         updateStatusItem()
         startPolling()
@@ -160,62 +155,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Launch at login
 
     var launchAtLoginEnabled: Bool {
-        FileManager.default.fileExists(atPath: launchAgentURL.path)
-    }
-
-    private var launchAgentURL: URL {
-        FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/LaunchAgents")
-            .appendingPathComponent(Launch.plistName)
+        LoginItem.isEnabled
     }
 
     func setLaunchAtLogin(_ enabled: Bool) throws {
-        let directory = launchAgentURL.deletingLastPathComponent()
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        if enabled {
-            let executable = Bundle.main.bundlePath + "/Contents/MacOS/StrataMonitor"
-            let plist = """
-            <?xml version="1.0" encoding="UTF-8"?>
-            <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-            <plist version="1.0">
-            <dict>
-                <key>Label</key><string>\(Launch.label)</string>
-                <key>ProgramArguments</key>
-                <array><string>\(executable)</string></array>
-                <key>RunAtLoad</key><true/>
-                <key>KeepAlive</key><false/>
-                <key>ProcessType</key><string>Interactive</string>
-            </dict>
-            </plist>
-            """
-            try plist.write(to: launchAgentURL, atomically: true, encoding: .utf8)
-            try? runLaunchctl(["unload", launchAgentURL.path])
-            try? runLaunchctl(["load", launchAgentURL.path])
-        } else {
-            try? runLaunchctl(["unload", launchAgentURL.path])
-            try? FileManager.default.removeItem(at: launchAgentURL)
-        }
-    }
-
-    /// If the app moved - rewrite the path inside the launch agent.
-    private func refreshLaunchAgentIfNeeded() {
-        guard launchAtLoginEnabled,
-              let text = try? String(contentsOf: launchAgentURL, encoding: .utf8),
-              !text.contains(Bundle.main.bundlePath)
-        else { return }
-        try? setLaunchAtLogin(true)
-    }
-
-    private func runLaunchctl(_ arguments: [String]) throws {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/bin/launchctl")
-        process.arguments = arguments
-        process.standardOutput = FileHandle.nullDevice
-        process.standardError = FileHandle.nullDevice
-        try process.run()
-        process.waitUntilExit()
-        if process.terminationStatus != 0 {
-            throw NSError(domain: "StrataMonitor", code: Int(process.terminationStatus))
-        }
+        try LoginItem.setEnabled(enabled)
     }
 }

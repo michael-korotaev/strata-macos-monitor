@@ -32,16 +32,24 @@ enum StatusImageRenderer {
             pieces.append(Piece(image: image, text: nil, size: image.size))
         }
 
-        if format != .iconOnly, let tps {
+        if format != .iconOnly {
+            let font = NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .semibold)
+            // Ширина резервируется по «8888»: реальное число может быть
+            // короче (или отсутствовать в состоянии простоя), но ширина
+            // пункта меню-бара от этого меняться не должна.
+            let slotWidth = (String(repeating: "8", count: MenuBarLabel.numberSlots) as NSString)
+                .size(withAttributes: [.font: font]).width
+            let style = NSMutableParagraphStyle()
+            style.alignment = .right          // число прижато к правому краю слота
             let text = NSAttributedString(
-                string: String(format: "%.0f", tps),
+                string: MenuBarLabel.slotText(tps),
                 attributes: [
-                    .font: NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .semibold),
-                    .foregroundColor: color
+                    .font: font,
+                    .foregroundColor: color,
+                    .paragraphStyle: style
                 ]
             )
-            // Measure the width of the actual string: otherwise "150" is clipped to the width of "0".
-            pieces.append(Piece(image: nil, text: text, size: text.size()))
+            pieces.append(Piece(image: nil, text: text, size: NSSize(width: slotWidth, height: text.size().height)))
         }
 
         guard !pieces.isEmpty else { return nil }

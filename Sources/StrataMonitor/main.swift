@@ -1,4 +1,5 @@
 import AppKit
+import Darwin
 import Foundation
 import StrataMonitorKit
 
@@ -69,6 +70,56 @@ if CommandLine.arguments.contains("--dump") {
     semaphore.wait()
     exit(0)
 }
+
+/// Ровно один экземпляр приложения: агент автозапуска и ручной запуск
+/// не должны давать два значка в меню-баре. Блокировка держится на файле,
+/// поэтому после падения приложения она снимается сама.
+///
+/// Файл лежит в Application Support, а не в Caches: систему очистки кэшей
+/// нельзя допускать удалять лок-файл, пока приложение запущено, иначе
+/// второй экземпляр создал бы новый файл и прошёл бы проверку.
+func claimSingleInstance() {
+    let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        .appendingPathComponent("io.github.michael-korotaev.strata-monitor", isDirectory: true)
+    try? FileManager.default.createDirectory(at: support, withIntermediateDirectories: true)
+    let lockPath = support.appendingPathComponent("instance.lock").path
+    let descriptor = open(lockPath, O_CREAT | O_RDWR, 0o644)
+    guard descriptor >= 0 else { return }          // не смогли создать — не блокируем
+    if flock(descriptor, LOCK_EX | LOCK_NB) != 0 {
+        close(descriptor)
+        exit(0)                                    // другой экземпляр уже работает
+    }
+    // дескриптор намеренно не закрываем: блокировка живёт вместе с процессом
+}
+
+// Diagnostic mode: manage the "launch at login" registration without the UI.
+//   StrataMonitor --login-item on | off | status
+if let index = CommandLine.arguments.firstIndex(of: "--login-item") {
+    let argument = CommandLine.arguments.count > index + 1
+        ? CommandLine.arguments[index + 1].lowercased()
+        : "status"
+    do {
+        switch argument {
+        case "on", "enable":
+            try LoginItem.setEnabled(true)
+        case "off", "disable":
+            try LoginItem.setEnabled(false)
+        case "status":
+            break
+        default:
+            FileHandle.standardError.write(Data("Unknown argument: \(argument)\n".utf8))
+            exit(2)
+        }
+        print("login item: \(LoginItem.isEnabled ? "enabled" : "disabled")"
+              + (LoginItem.requiresApproval ? " (requires approval in System Settings)" : ""))
+        exit(0)
+    } catch {
+        FileHandle.standardError.write(Data("error: \(error.localizedDescription)\n".utf8))
+        exit(1)
+    }
+}
+
+claimSingleInstance()
 
 let application = NSApplication.shared
 let delegate = MainActor.assumeIsolated { AppDelegate() }

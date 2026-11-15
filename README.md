@@ -47,7 +47,7 @@ app puts the same information in the macOS menu bar and keeps it one click away.
 - **Russian and English** — switch the interface language in the settings.
 - **No dependencies** — Swift + SwiftUI only, no package managers, no runtime to
   install. The app is a single ~700 KB binary.
-- **Launch at login** — optional, via a LaunchAgent.
+- **Launch at login** — optional, through the system Login Items list.
 
 ## Requirements
 
@@ -86,7 +86,7 @@ Click the menu bar icon, then the gear icon at the bottom of the panel.
 | Poll interval | 0.5 s / 1 s / 2 s / 5 s. The server keeps a 60-sample history, so 1 s is a good default. |
 | Menu bar | Icon + number, number only, or icon only. |
 | Interface language | Russian or English. |
-| Launch at login | Installs a LaunchAgent in `~/Library/LaunchAgents`. |
+| Launch at login | Adds the app to the system Login Items list (macOS 13+ API). |
 
 On the first launch the panel asks for the server address, so nothing has to be
 edited by hand.
@@ -142,7 +142,16 @@ STRATA_ENDPOINT=http://other-host:12388/metrics ... --dump
 
 # start with the settings panel open
 open -a dist/StrataMonitor.app --args --settings
+
+# manage the "launch at login" registration from the shell
+./dist/StrataMonitor.app/Contents/MacOS/StrataMonitor --login-item status
+./dist/StrataMonitor.app/Contents/MacOS/StrataMonitor --login-item on
+./dist/StrataMonitor.app/Contents/MacOS/StrataMonitor --login-item off
 ```
+
+Only one copy of the app runs at a time: a second launch (from Finder, from the
+dock or from the login item) sees the lock of the running instance and quits
+immediately, so the menu bar never gets a duplicate icon.
 
 The project has two targets:
 
