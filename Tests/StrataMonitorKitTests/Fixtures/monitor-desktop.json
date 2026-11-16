@@ -1,0 +1,762 @@
+{
+ "phase": "idle",
+ "phaseLabel": "Waiting for a request",
+ "variantId": null,
+ "prompt": {
+  "done": 0,
+  "total": 0,
+  "pct": 0
+ },
+ "generation": {
+  "done": null,
+  "total": null
+ },
+ "outputTps": 0,
+ "promptTps": 0,
+ "queue": {
+  "running": 0,
+  "waiting": 0
+ },
+ "context": {
+  "usedTokens": 0,
+  "maxTokens": 32768,
+  "pct": 0,
+  "parts": {
+   "system": 0,
+   "tools": 0,
+   "messages": 0
+  }
+ },
+ "expertCache": {
+  "used": 0,
+  "total": 64
+ },
+ "hardware": {
+  "gpus": [
+   {
+    "id": "GPU-8cb7d132-8c3e-39ab-1b0e-64c174d3ef3f",
+    "temperatureC": 35.79,
+    "utilizationPct": 1,
+    "memoryUsedGb": 19.74,
+    "powerW": 16.49,
+    "powerLimitW": 300,
+    "pcieGen": 1,
+    "pcieGenMax": 4,
+    "pcieWidth": 16,
+    "pcieRxMbs": 4,
+    "fanPct": 0,
+    "clockMhz": 210,
+    "sampledAt": "2026-11-16T22:06:24.679Z",
+    "source": "sensor"
+   }
+  ],
+  "cpus": [
+   {
+    "id": "CPU0",
+    "utilizationPct": 6
+   }
+  ],
+  "cpuLoad": 6,
+  "gpuLoad": 1,
+  "vramUsedGb": 19.74,
+  "vramTotalGb": 24,
+  "ramUsedGb": 59.69971466064453,
+  "ramTotalGb": 63.834007263183594,
+  "gpuTempC": 35.79,
+  "tempLimitC": 90,
+  "powerW": 16.49,
+  "powerLimitW": 300,
+  "pcieRxMbs": 4,
+  "cpuTempC": null,
+  "ssdTempC": 41,
+  "energyWh": 64.223,
+  "diskReadGbs": 3.041113913801694e-05,
+  "diskWriteMbs": 0.18100710014947682
+ },
+ "requests": [
+  {
+   "id": "req_19316485",
+   "at": "2026-11-16T22:01:12.177Z",
+   "client": "opencode/latest/2.3.0/cli",
+   "endpoint": "/chat/completions",
+   "state": "done",
+   "tokensIn": 34741,
+   "tokensOut": 5438,
+   "durationMs": 70487,
+   "model": "iq3_s",
+   "instanceId": "354e15be-9131-4b62-9ebd-381a00a2d0b0",
+   "gpuIds": [
+    "0"
+   ],
+   "cancellable": false,
+   "cancelRequested": false,
+   "usageSource": "reported",
+   "tps": 86.5,
+   "promptTps": 1321.7
+  },
+  {
+   "id": "req_b8a4ee9a",
+   "at": "2026-11-16T21:57:27.306Z",
+   "client": "Python-urllib/3.14",
+   "endpoint": "/chat/completions",
+   "state": "done",
+   "tokensIn": 223326,
+   "tokensOut": 1618,
+   "durationMs": 116020,
+   "model": "iq3_s",
+   "instanceId": "354e15be-9131-4b62-9ebd-381a00a2d0b0",
+   "gpuIds": [
+    "0"
+   ],
+   "cancellable": false,
+   "cancelRequested": false,
+   "usageSource": "reported",
+   "tps": 99,
+   "promptTps": 2247
+  },
+  {
+   "id": "req_42149ec8",
+   "at": "2026-11-16T21:55:42.114Z",
+   "client": "Python-urllib/3.14",
+   "endpoint": "/chat/completions",
+   "state": "done",
+   "tokensIn": 223284,
+   "tokensOut": 619,
+   "durationMs": 104465,
+   "model": "iq3_s",
+   "instanceId": "354e15be-9131-4b62-9ebd-381a00a2d0b0",
+   "gpuIds": [
+    "0"
+   ],
+   "cancellable": false,
+   "cancelRequested": false,
+   "usageSource": "reported",
+   "tps": 107.4,
+   "promptTps": 2269.6
+  },
+  {
+   "id": "req_2df24661",
+   "at": "2026-11-16T21:55:35.270Z",
+   "client": "Python-urllib/3.14",
+   "endpoint": "/chat/completions",
+   "state": "done",
+   "tokensIn": 6810,
+   "tokensOut": 514,
+   "durationMs": 6092,
+   "model": "iq3_s",
+   "instanceId": "354e15be-9131-4b62-9ebd-381a00a2d0b0",
+   "gpuIds": [
+    "0"
+   ],
+   "cancellable": false,
+   "cancelRequested": false,
+   "usageSource": "reported",
+   "tps": 85.3,
+   "promptTps": 88.8
+  },
+  {
+   "id": "req_eba026d9",
+   "at": "2026-11-16T21:55:20.434Z",
+   "client": "Python-urllib/3.14",
+   "endpoint": "/chat/completions",
+   "state": "done",
+   "tokensIn": 6810,
+   "tokensOut": 1048,
+   "durationMs": 14674,
+   "model": "iq3_s",
+   "instanceId": "354e15be-9131-4b62-9ebd-381a00a2d0b0",
+   "gpuIds": [
+    "0"
+   ],
+   "cancellable": false,
+   "cancelRequested": false,
+   "usageSource": "reported",
+   "tps": 93.7,
+   "promptTps": 1960.8
+  },
+  {
+   "id": "req_0a52ae4f",
+   "at": "2026-11-16T21:55:10.192Z",
+   "client": "Python-urllib/3.14",
+   "endpoint": "/chat/completions",
+   "state": "done",
+   "tokensIn": 6768,
+   "tokensOut": 573,
+   "durationMs": 10053,
+   "model": "iq3_s",
+   "instanceId": "354e15be-9131-4b62-9ebd-381a00a2d0b0",
+   "gpuIds": [
+    "0"
+   ],
+   "cancellable": false,
+   "cancelRequested": false,
+   "usageSource": "reported",
+   "tps": 96.1,
+   "promptTps": 1661.4
+  },
+  {
+   "id": "req_5796fc22",
+   "at": "2026-11-16T21:45:56.162Z",
+   "client": "opencode/latest/2.3.0/cli",
+   "endpoint": "/chat/completions",
+   "state": "done",
+   "tokensIn": 24762,
+   "tokensOut": 9961,
+   "durationMs": 120019,
+   "model": "iq3_s",
+   "instanceId": "354e15be-9131-4b62-9ebd-381a00a2d0b0",
+   "gpuIds": [
+    "0"
+   ],
+   "cancellable": false,
+   "cancelRequested": false,
+   "usageSource": "reported",
+   "tps": 85.7,
+   "promptTps": 1523.7
+  },
+  {
+   "id": "req_941b18fd",
+   "at": "2026-11-16T21:45:14.599Z",
+   "client": "opencode/latest/2.3.0/cli",
+   "endpoint": "/chat/completions",
+   "state": "done",
+   "tokensIn": 25438,
+   "tokensOut": 48,
+   "durationMs": 15736,
+   "model": "iq3_s",
+   "instanceId": "354e15be-9131-4b62-9ebd-381a00a2d0b0",
+   "gpuIds": [
+    "0"
+   ],
+   "cancellable": false,
+   "cancelRequested": false,
+   "usageSource": "reported",
+   "tps": 70.2,
+   "promptTps": 2050.9
+  },
+  {
+   "id": "req_2fbdcfed",
+   "at": "2026-11-16T21:45:14.585Z",
+   "client": "opencode/latest/2.3.0/cli",
+   "endpoint": "/chat/completions",
+   "state": "done",
+   "tokensIn": 396,
+   "tokensOut": 104,
+   "durationMs": 2653,
+   "model": "iq3_s",
+   "instanceId": "354e15be-9131-4b62-9ebd-381a00a2d0b0",
+   "gpuIds": [
+    "0"
+   ],
+   "cancellable": false,
+   "cancelRequested": false,
+   "usageSource": "reported",
+   "tps": 77.8,
+   "promptTps": 303.1
+  },
+  {
+   "id": "req_498e2dc4",
+   "at": "2026-11-16T21:37:52.860Z",
+   "client": "Strata chat",
+   "endpoint": "/agent",
+   "state": "done",
+   "tokensIn": null,
+   "tokensOut": 58,
+   "durationMs": 19592,
+   "model": "iq3_s",
+   "instanceId": "354e15be-9131-4b62-9ebd-381a00a2d0b0",
+   "gpuIds": [
+    "0"
+   ],
+   "cancellable": false,
+   "cancelRequested": false,
+   "usageSource": "unavailable"
+  }
+ ],
+ "conversationCache": {
+  "source": "unavailable"
+ },
+ "history": [
+  {
+   "t": 1794866725090,
+   "outputTps": 0,
+   "promptTps": 0,
+   "gpus": [
+    {
+     "id": "GPU-8cb7d132-8c3e-39ab-1b0e-64c174d3ef3f",
+     "temperatureC": 35.76,
+     "utilizationPct": 4,
+     "memoryUsedGb": 19.73,
+     "powerW": 18.17,
+     "powerLimitW": 300,
+     "pcieGen": 1,
+     "pcieGenMax": 4,
+     "pcieWidth": 16,
+     "pcieRxMbs": 2,
+     "fanPct": 0,
+     "clockMhz": 210,
+     "sampledAt": "2026-11-16T22:05:24.077Z",
+     "source": "sensor"
+    }
+   ],
+   "cpus": [
+    {
+     "id": "CPU0",
+     "utilizationPct": 6
+    }
+   ],
+   "cpuLoad": 6,
+   "gpuLoad": 4,
+   "vramUsedGb": 19.73,
+   "vramTotalGb": 24,
+   "ramUsedGb": 59.81434631347656,
+   "ramTotalGb": 63.834007263183594,
+   "gpuTempC": 35.76,
+   "tempLimitC": 90,
+   "powerW": 18.17,
+   "powerLimitW": 300,
+   "pcieRxMbs": 2,
+   "cpuTempC": null,
+   "ssdTempC": 41,
+   "energyWh": 63.936,
+   "diskReadGbs": 3.1970705913792834e-05,
+   "diskWriteMbs": 0.17945275639433822
+  },
+  {
+   "t": 1794866726090,
+   "outputTps": 0,
+   "promptTps": 0,
+   "gpus": [
+    {
+     "id": "GPU-8cb7d132-8c3e-39ab-1b0e-64c174d3ef3f",
+     "temperatureC": 35.76,
+     "utilizationPct": 4,
+     "memoryUsedGb": 19.73,
+     "powerW": 18.17,
+     "powerLimitW": 300,
+     "pcieGen": 1,
+     "pcieGenMax": 4,
+     "pcieWidth": 16,
+     "pcieRxMbs": 2,
+     "fanPct": 0,
+     "clockMhz": 210,
+     "sampledAt": "2026-11-16T22:05:24.077Z",
+     "source": "sensor"
+    }
+   ],
+   "cpus": [
+    {
+     "id": "CPU0",
+     "utilizationPct": 6
+    }
+   ],
+   "cpuLoad": 6,
+   "gpuLoad": 4,
+   "vramUsedGb": 19.73,
+   "vramTotalGb": 24,
+   "ramUsedGb": 59.81434631347656,
+   "ramTotalGb": 63.834007263183594,
+   "gpuTempC": 35.76,
+   "tempLimitC": 90,
+   "powerW": 18.17,
+   "powerLimitW": 300,
+   "pcieRxMbs": 2,
+   "cpuTempC": null,
+   "ssdTempC": 41,
+   "energyWh": 63.941,
+   "diskReadGbs": 3.1970705913792834e-05,
+   "diskWriteMbs": 0.17945275639433822
+  },
+  {
+   "t": 1794866727099,
+   "outputTps": 0,
+   "promptTps": 0,
+   "gpus": [
+    {
+     "id": "GPU-8cb7d132-8c3e-39ab-1b0e-64c174d3ef3f",
+     "temperatureC": 35.76,
+     "utilizationPct": 4,
+     "memoryUsedGb": 19.73,
+     "powerW": 18.17,
+     "powerLimitW": 300,
+     "pcieGen": 1,
+     "pcieGenMax": 4,
+     "pcieWidth": 16,
+     "pcieRxMbs": 2,
+     "fanPct": 0,
+     "clockMhz": 210,
+     "sampledAt": "2026-11-16T22:05:24.077Z",
+     "source": "sensor"
+    }
+   ],
+   "cpus": [
+    {
+     "id": "CPU0",
+     "utilizationPct": 6
+    }
+   ],
+   "cpuLoad": 6,
+   "gpuLoad": 4,
+   "vramUsedGb": 19.73,
+   "vramTotalGb": 24,
+   "ramUsedGb": 59.81434631347656,
+   "ramTotalGb": 63.834007263183594,
+   "gpuTempC": 35.76,
+   "tempLimitC": 90,
+   "powerW": 18.17,
+   "powerLimitW": 300,
+   "pcieRxMbs": 2,
+   "cpuTempC": null,
+   "ssdTempC": 41,
+   "energyWh": 63.946,
+   "diskReadGbs": 3.1970705913792834e-05,
+   "diskWriteMbs": 0.17945275639433822
+  },
+  {
+   "t": 1794866728107,
+   "outputTps": 0,
+   "promptTps": 0,
+   "gpus": [
+    {
+     "id": "GPU-8cb7d132-8c3e-39ab-1b0e-64c174d3ef3f",
+     "temperatureC": 35.88,
+     "utilizationPct": 5,
+     "memoryUsedGb": 19.72,
+     "powerW": 18.07,
+     "powerLimitW": 300,
+     "pcieGen": 1,
+     "pcieGenMax": 4,
+     "pcieWidth": 16,
+     "pcieRxMbs": 3,
+     "fanPct": 0,
+     "clockMhz": 210,
+     "sampledAt": "2026-11-16T22:05:27.091Z",
+     "source": "sensor"
+    }
+   ],
+   "cpus": [
+    {
+     "id": "CPU0",
+     "utilizationPct": 8
+    }
+   ],
+   "cpuLoad": 8,
+   "gpuLoad": 5,
+   "vramUsedGb": 19.72,
+   "vramTotalGb": 24,
+   "ramUsedGb": 59.97772216796875,
+   "ramTotalGb": 63.834007263183594,
+   "gpuTempC": 35.88,
+   "tempLimitC": 90,
+   "powerW": 18.07,
+   "powerLimitW": 300,
+   "pcieRxMbs": 3,
+   "cpuTempC": null,
+   "ssdTempC": 41,
+   "energyWh": 63.951,
+   "diskReadGbs": 8.12292750254144e-05,
+   "diskWriteMbs": 0.1901229202880556
+  },
+  {
+   "t": 1794866729117,
+   "outputTps": 0,
+   "promptTps": 0,
+   "gpus": [
+    {
+     "id": "GPU-8cb7d132-8c3e-39ab-1b0e-64c174d3ef3f",
+     "temperatureC": 35.88,
+     "utilizationPct": 5,
+     "memoryUsedGb": 19.72,
+     "powerW": 18.07,
+     "powerLimitW": 300,
+     "pcieGen": 1,
+     "pcieGenMax": 4,
+     "pcieWidth": 16,
+     "pcieRxMbs": 3,
+     "fanPct": 0,
+     "clockMhz": 210,
+     "sampledAt": "2026-11-16T22:05:27.091Z",
+     "source": "sensor"
+    }
+   ],
+   "cpus": [
+    {
+     "id": "CPU0",
+     "utilizationPct": 8
+    }
+   ],
+   "cpuLoad": 8,
+   "gpuLoad": 5,
+   "vramUsedGb": 19.72,
+   "vramTotalGb": 24,
+   "ramUsedGb": 59.97772216796875,
+   "ramTotalGb": 63.834007263183594,
+   "gpuTempC": 35.88,
+   "tempLimitC": 90,
+   "powerW": 18.07,
+   "powerLimitW": 300,
+   "pcieRxMbs": 3,
+   "cpuTempC": null,
+   "ssdTempC": 41,
+   "energyWh": 63.956,
+   "diskReadGbs": 8.12292750254144e-05,
+   "diskWriteMbs": 0.1901229202880556
+  },
+  {
+   "t": 1794866730137,
+   "outputTps": 0,
+   "promptTps": 0,
+   "gpus": [
+    {
+     "id": "GPU-8cb7d132-8c3e-39ab-1b0e-64c174d3ef3f",
+     "temperatureC": 35.88,
+     "utilizationPct": 5,
+     "memoryUsedGb": 19.72,
+     "powerW": 18.07,
+     "powerLimitW": 300,
+     "pcieGen": 1,
+     "pcieGenMax": 4,
+     "pcieWidth": 16,
+     "pcieRxMbs": 3,
+     "fanPct": 0,
+     "clockMhz": 210,
+     "sampledAt": "2026-11-16T22:05:27.091Z",
+     "source": "sensor"
+    }
+   ],
+   "cpus": [
+    {
+     "id": "CPU0",
+     "utilizationPct": 8
+    }
+   ],
+   "cpuLoad": 8,
+   "gpuLoad": 5,
+   "vramUsedGb": 19.72,
+   "vramTotalGb": 24,
+   "ramUsedGb": 59.97772216796875,
+   "ramTotalGb": 63.834007263183594,
+   "gpuTempC": 35.88,
+   "tempLimitC": 90,
+   "powerW": 18.07,
+   "powerLimitW": 300,
+   "pcieRxMbs": 3,
+   "cpuTempC": null,
+   "ssdTempC": 41,
+   "energyWh": 63.961,
+   "diskReadGbs": 8.12292750254144e-05,
+   "diskWriteMbs": 0.1901229202880556
+  },
+  {
+   "t": 1794866731145,
+   "outputTps": 0,
+   "promptTps": 0,
+   "gpus": [
+    {
+     "id": "GPU-8cb7d132-8c3e-39ab-1b0e-64c174d3ef3f",
+     "temperatureC": 35.76,
+     "utilizationPct": 4,
+     "memoryUsedGb": 19.73,
+     "powerW": 18.59,
+     "powerLimitW": 300,
+     "pcieGen": 1,
+     "pcieGenMax": 4,
+     "pcieWidth": 16,
+     "pcieRxMbs": 0,
+     "fanPct": 0,
+     "clockMhz": 210,
+     "sampledAt": "2026-11-16T22:05:30.130Z",
+     "source": "sensor"
+    }
+   ],
+   "cpus": [
+    {
+     "id": "CPU0",
+     "utilizationPct": 7
+    }
+   ],
+   "cpuLoad": 7,
+   "gpuLoad": 4,
+   "vramUsedGb": 19.73,
+   "vramTotalGb": 24,
+   "ramUsedGb": 59.96318435668945,
+   "ramTotalGb": 63.834007263183594,
+   "gpuTempC": 35.76,
+   "tempLimitC": 90,
+   "powerW": 18.59,
+   "powerLimitW": 300,
+   "pcieRxMbs": 0,
+   "cpuTempC": null,
+   "ssdTempC": 41,
+   "energyWh": 63.966,
+   "diskReadGbs": 0.00042758692907064695,
+   "diskWriteMbs": 6.361023830263814
+  },
+  {
+   "t": 1794866732160,
+   "outputTps": 0,
+   "promptTps": 0,
+   "gpus": [
+    {
+     "id": "GPU-8cb7d132-8c3e-39ab-1b0e-64c174d3ef3f",
+     "temperatureC": 35.76,
+     "utilizationPct": 4,
+     "memoryUsedGb": 19.73,
+     "powerW": 18.59,
+     "powerLimitW": 300,
+     "pcieGen": 1,
+     "pcieGenMax": 4,
+     "pcieWidth": 16,
+     "pcieRxMbs": 0,
+     "fanPct": 0,
+     "clockMhz": 210,
+     "sampledAt": "2026-11-16T22:05:30.130Z",
+     "source": "sensor"
+    }
+   ],
+   "cpus": [
+    {
+     "id": "CPU0",
+     "utilizationPct": 7
+    }
+   ],
+   "cpuLoad": 7,
+   "gpuLoad": 4,
+   "vramUsedGb": 19.73,
+   "vramTotalGb": 24,
+   "ramUsedGb": 59.96318435668945,
+   "ramTotalGb": 63.834007263183594,
+   "gpuTempC": 35.76,
+   "tempLimitC": 90,
+   "powerW": 18.59,
+   "powerLimitW": 300,
+   "pcieRxMbs": 0,
+   "cpuTempC": null,
+   "ssdTempC": 41,
+   "energyWh": 63.972,
+   "diskReadGbs": 0.00042758692907064695,
+   "diskWriteMbs": 6.361023830263814
+  },
+  {
+   "t": 1794866733172,
+   "outputTps": 0,
+   "promptTps": 0,
+   "gpus": [
+    {
+     "id": "GPU-8cb7d132-8c3e-39ab-1b0e-64c174d3ef3f",
+     "temperatureC": 35.76,
+     "utilizationPct": 4,
+     "memoryUsedGb": 19.73,
+     "powerW": 18.59,
+     "powerLimitW": 300,
+     "pcieGen": 1,
+     "pcieGenMax": 4,
+     "pcieWidth": 16,
+     "pcieRxMbs": 0,
+     "fanPct": 0,
+     "clockMhz": 210,
+     "sampledAt": "2026-11-16T22:05:30.130Z",
+     "source": "sensor"
+    }
+   ],
+   "cpus": [
+    {
+     "id": "CPU0",
+     "utilizationPct": 7
+    }
+   ],
+   "cpuLoad": 7,
+   "gpuLoad": 4,
+   "vramUsedGb": 19.73,
+   "vramTotalGb": 24,
+   "ramUsedGb": 59.96318435668945,
+   "ramTotalGb": 63.834007263183594,
+   "gpuTempC": 35.76,
+   "tempLimitC": 90,
+   "powerW": 18.59,
+   "powerLimitW": 300,
+   "pcieRxMbs": 0,
+   "cpuTempC": null,
+   "ssdTempC": 41,
+   "energyWh": 63.977,
+   "diskReadGbs": 0.00042758692907064695,
+   "diskWriteMbs": 6.361023830263814
+  },
+  {
+   "t": 1794866734175,
+   "outputTps": 0,
+   "promptTps": 0,
+   "gpus": [
+    {
+     "id": "GPU-8cb7d132-8c3e-39ab-1b0e-64c174d3ef3f",
+     "temperatureC": 35.76,
+     "utilizationPct": 0,
+     "memoryUsedGb": 19.74,
+     "powerW": 17.33,
+     "powerLimitW": 300,
+     "pcieGen": 1,
+     "pcieGenMax": 4,
+     "pcieWidth": 16,
+     "pcieRxMbs": 0,
+     "fanPct": 0,
+     "clockMhz": 210,
+     "sampledAt": "2026-11-16T22:05:33.162Z",
+     "source": "sensor"
+    }
+   ],
+   "cpus": [
+    {
+     "id": "CPU0",
+     "utilizationPct": 5
+    }
+   ],
+   "cpuLoad": 5,
+   "gpuLoad": 0,
+   "vramUsedGb": 19.74,
+   "vramTotalGb": 24,
+   "ramUsedGb": 59.954978942871094,
+   "ramTotalGb": 63.834007263183594,
+   "gpuTempC": 35.76,
+   "tempLimitC": 90,
+   "powerW": 17.33,
+   "powerLimitW": 300,
+   "pcieRxMbs": 0,
+   "cpuTempC": null,
+   "ssdTempC": 41,
+   "energyWh": 63.982,
+   "diskReadGbs": 0.00042758692907064695,
+   "diskWriteMbs": 6.361023830263814
+  }
+ ],
+ "totals": {
+  "tokensIn": 0,
+  "tokensOut": 0,
+  "requests": 0,
+  "avgTps": 0,
+  "since": "2026-11-16T21:19:23.393Z",
+  "ttftMs": 0,
+  "cachedTokens": 0,
+  "uncachedTokens": 0,
+  "usageRequests": 0,
+  "latencyRequests": 0
+ },
+ "telemetry": {
+  "throughput": "none",
+  "thermals": "none",
+  "memory": "none",
+  "ttftMs": null,
+  "system": "sensor"
+ },
+ "engine": {
+  "status": "stopped",
+  "running": false,
+  "pid": null,
+  "port": 8080,
+  "modelId": null,
+  "metricsSource": "none",
+  "command": "",
+  "binary": null,
+  "startedAt": null,
+  "logCount": 0
+ }
+}

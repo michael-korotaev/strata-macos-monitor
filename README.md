@@ -44,6 +44,9 @@ app puts the same information in the macOS menu bar and keeps it one click away.
   not the last finished one, plus the prefill (prompt read) rate.
 - **Any address** — the Strata server may run on the same Mac or on another
   machine in the LAN; the address is configurable.
+- **Both Strata installations** — the source build (`git clone`) and the
+  desktop application speak different APIs; the app understands both and finds
+  the right endpoint on its own.
 - **Russian and English** — switch the interface language in the settings.
 - **No dependencies** — Swift + SwiftUI only, no package managers, no runtime to
   install. The app is a single ~700 KB binary.
@@ -52,7 +55,16 @@ app puts the same information in the macOS menu bar and keeps it one click away.
 ## Requirements
 
 - macOS 14 (Sonoma) or newer, Apple silicon or Intel.
-- A reachable Strata server. Strata exposes its metrics at
+- A reachable Strata server. Strata is installed in two ways and each one
+  exposes its metrics differently:
+
+  | Installation | Metrics endpoint | Typical port |
+  |---|---|---|
+  | Source build (`git clone`) | `GET /metrics` | 12388 |
+  | Desktop application | `GET /api/monitor` | 12387 |
+
+  The app probes both, so it does not matter which one you run. See
+  [Configuration](#configuration).
   `http://<host>:<port>/metrics` (port `12388` by default).
 
 ## Install
@@ -82,7 +94,8 @@ Click the menu bar icon, then the gear icon at the bottom of the panel.
 
 | Setting | Meaning |
 |---|---|
-| Server address | The metrics endpoint, e.g. `http://192.168.1.10:12388/metrics`. The default is `http://localhost:12388/metrics`. |
+| Server address | Where the Strata web UI is served, e.g. `http://192.168.1.10:12387`. The path is optional — the app finds the metrics endpoint itself. |
+| Strata installation | `Detect automatically` (default), `Source build (git)` or `Desktop application`. Only needed if the automatic detection picks the wrong one. |
 | Poll interval | 0.5 s / 1 s / 2 s / 5 s. The server keeps a 60-sample history, so 1 s is a good default. |
 | Menu bar | Icon + number, number only, or icon only. |
 | Interface language | Russian or English. |
@@ -91,26 +104,47 @@ Click the menu bar icon, then the gear icon at the bottom of the panel.
 On the first launch the panel asks for the server address, so nothing has to be
 edited by hand.
 
+**How the endpoint is found.** The app first tries the address as it is, then
+the known paths on that host (`/api/monitor` for the desktop application,
+`/metrics` for a source build), then the same host on the other well-known
+port (12387 and 12388). The address that answered is remembered, so the search
+happens only once — and again only if the server moves its endpoints.
+
+To see what the app found, run the diagnostic mode:
+
+```bash
+./dist/StrataMonitor.app/Contents/MacOS/StrataMonitor --dump
+```
+
+It prints the resolved endpoint, the detected installation and the current
+readings.
+
 ## What is shown
 
-Everything comes from a single request to `GET /metrics`:
+Everything comes from a single request — to `GET /metrics` for a source build
+or to `GET /api/monitor` for the desktop application:
 
 | Block | Used for |
 |---|---|
-| `live` | Current state (`idle` / `reading` / `generating`), phase, live tok/s, mean tok/s, prefill rate, generated tokens |
+| `live` / `phase` | Current state (`idle` / `reading` / `generating`), phase, live tok/s, mean tok/s, prefill rate, generated tokens |
 | `hardware` | GPU utilisation, VRAM, temperature, power, PCIe throughput, CPU, RAM, disk |
-| `hardware_static` | GPU and CPU model names |
+| `hardware_static` | GPU and CPU model names (a source build; a desktop application serves them in `GET /api/hardware`) |
 | `history` | 60 samples (about one per second) — used for the sparklines |
 | `requests` | Recent requests with decode speed, time to first token and speculative decoding acceptance |
 | `totals`, `conversation_cache`, `engine` | Session totals, conversation cache hit rate, engine configuration |
 
 The JSON is parsed defensively: unknown fields are ignored and missing ones
 simply do not appear in the UI, so a Strata update will not break the monitor.
+The desktop application keeps some data in separate endpoints
+(`GET /api/hardware` and `GET /api/models`); the app reads them once a minute
+and shows the GPU and CPU names, the core count and the parameters of the
+loaded model.
 
 ## Troubleshooting
 
 **The icon is red with a slash.** The server is unreachable. Check the address
-in the settings and that the Strata server is actually running.
+in the settings and that the Strata server is actually running. The address is
+the web UI address, for example `http://192.168.1.10:12387`.
 
 **macOS asks for local network access.** Strata usually runs on another
 machine in the LAN; macOS 15+ asks for permission the first time an app talks to
@@ -120,15 +154,16 @@ Network*.
 **The speed stays at zero.** The server only reports a speed while a request is
 being processed. Send a request to Strata and watch the menu bar.
 
-**The interface is empty.** The Strata build you run may not expose `/metrics`.
-Open `http://<host>:<port>/metrics` in a browser: you should see a JSON object
-with a `live` key.
+**The interface is empty.** Run `--dump` and look at the `installation:` line —
+it tells you which flavour the app detected. If it says `source build` but you
+run the desktop application (or the other way round), pick the right one in
+the settings.
 
 ## Development
 
 ```bash
 swift build -c release   # build
-swift test               # unit tests (parsing of a real /metrics payload)
+swift test               # unit tests (parsing of real payloads of both Strata installations)
 ./build.sh               # build + assemble dist/StrataMonitor.app + zip
 swift scripts/make-icon.swift   # regenerate Resources/AppIcon.icns
 ```
@@ -138,7 +173,7 @@ Useful flags:
 ```bash
 # one-shot metrics snapshot in stdout (diagnostics)
 ./dist/StrataMonitor.app/Contents/MacOS/StrataMonitor --dump
-STRATA_ENDPOINT=http://other-host:12388/metrics ... --dump
+STRATA_ENDPOINT=http://other-host:12387 ... --dump
 
 # start with the settings panel open
 open -a dist/StrataMonitor.app --args --settings
@@ -158,6 +193,11 @@ The project has two targets:
 - `StrataMonitorKit` — metrics client, JSON parsing, state model and the ru/en
   string tables. No UI, fully unit tested.
 - `StrataMonitor` — the menu bar app: `NSStatusItem`, popover, settings.
+
+Both Strata installations are parsed by the same model: `MetricsPayload` reads
+the new fields first and falls back to the old ones, so a field that only one
+of the two has is simply optional. `StaticInfo` covers the desktop
+application's extra endpoints (`/api/hardware`, `/api/models`).
 
 The menu bar item is drawn with AppKit (`NSStatusItem`) rather than
 `MenuBarExtra`, because a menu bar label has to combine an SF Symbol with a

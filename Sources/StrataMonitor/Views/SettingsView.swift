@@ -30,6 +30,23 @@ struct SettingsView: View {
                 }
             }
 
+            field(model.t("settings.flavor")) {
+                Menu {
+                    ForEach(StrataFlavor.allCases) { flavor in
+                        Button {
+                            model.serverFlavor = flavor
+                        } label: {
+                            Text(flavor.title(language: model.language))
+                        }
+                    }
+                } label: {
+                    Text(model.serverFlavor.title(language: model.language))
+                        .font(.system(size: 11))
+                }
+                .menuStyle(.borderlessButton)
+                .controlSize(.small)
+            }
+
             field(model.t("settings.interval")) {
                 Menu {
                     ForEach(Self.intervals, id: \.self) { value in

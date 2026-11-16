@@ -23,6 +23,7 @@ public enum Loc {
         "status.generating": "Генерация",
         "status.prompt": "Промпт",
         "status.loading": "Загрузка",
+        "status.queued": "В очереди",
         "status.idle": "Простой",
         "status.connecting": "Подключение",
         "status.offline": "Нет связи",
@@ -60,7 +61,8 @@ public enum Loc {
 
         "settings.title": "Настройки",
         "settings.endpoint": "Адрес сервера",
-        "settings.endpointPlaceholder": "http://host:port/metrics",
+        "settings.flavor": "Установка Strata",
+        "settings.endpointPlaceholder": "http://host:port",
         "settings.apply": "Применить",
         "settings.openBrowser": "В браузере",
         "settings.interval": "Интервал опроса",
@@ -71,14 +73,18 @@ public enum Loc {
         "settings.launchFailed": "Не удалось",
 
         "setup.title": "Подключение к Strata",
-        "setup.hint": "Укажите адрес, на котором отвечает веб-морда Strata. Обычно это http://<ip-компьютера>:12388/metrics",
+        "setup.hint": "Укажите адрес, на котором открывается веб-морда Strata (например http://192.168.1.10:12387). Путь можно не указывать — приложение найдёт данные монитора само.",
         "setup.connect": "Подключиться",
         "setup.cancel": "Отмена",
-        "setup.placeholder": "http://192.168.1.10:12388/metrics",
+        "setup.placeholder": "http://192.168.1.10:12387",
 
         "menubar.format.iconAndNumber": "Значок + число",
         "menubar.format.numberOnly": "Только число",
         "menubar.format.iconOnly": "Только значок",
+
+        "flavor.automatic": "Определить автоматически",
+        "flavor.sourceBuild": "Сборка из исходников (git)",
+        "flavor.desktop": "Desktop-приложение",
 
         "section.engine": "Движок",
         "section.cache": "Кеш диалогов",
@@ -88,6 +94,10 @@ public enum Loc {
 
         "engine.model": "модель",
         "engine.version": "версия движка",
+        "engine.backend": "бэкенд",
+        "engine.quant": "квант",
+        "engine.layers": "слои",
+        "engine.host": "хост",
         "engine.context": "контекст",
         "engine.kv": "KV",
         "engine.speculative": "спекулятивное декодирование",
@@ -112,6 +122,8 @@ public enum Loc {
         "totals.fromCache": "из кеша",
         "totals.outputTokens": "ответов (токенов)",
         "totals.decodeTime": "время декода",
+        "totals.avgTps": "средняя скорость",
+        "totals.ttft": "ttft",
         "totals.drafts": "принято драфтов",
         "totals.sessionStart": "сессия с",
 
@@ -128,6 +140,7 @@ public enum Loc {
         "hardware.cores": "ядер",
         "hardware.pcie": "PCIe",
         "hardware.disk": "диск",
+        "hardware.diskFree": "свободно на диске",
         "hardware.tempRange": "темп (мин/макс)",
         "hardware.powerRange": "питание (мин/макс)",
         "hardware.pcieIn": "МБ/с вход",
@@ -136,11 +149,15 @@ public enum Loc {
         "hardware.diskWrite": "запись",
         "hardware.threads": "потоков",
 
-        "offline.hint": "Сервер не отвечает. Проверьте адрес в настройках (шестерёнка внизу панели) — обычно это http://<ip>:12388/metrics",
+        "offline.hint": "Сервер не отвечает. Проверьте адрес в настройках (шестерёнка внизу панели) — обычно это http://<ip>:12387",
 
         "error.timeout": "Таймаут",
         "error.unreachable": "Сервер недоступен",
-        "error.lost": "Соединение потеряно"
+        "error.lost": "Соединение потеряно",
+        "error.badURL": "Некорректный адрес:",
+        "error.badStatus": "Сервер ответил HTTP %d",
+        "error.emptyBody": "Пустой ответ сервера",
+        "error.noMonitor": "Не нашёл данные монитора на сервере"
     ]
 
     static let en: [String: String] = [
@@ -148,6 +165,7 @@ public enum Loc {
         "status.generating": "Generating",
         "status.prompt": "Prompt",
         "status.loading": "Loading",
+        "status.queued": "Queued",
         "status.idle": "Idle",
         "status.connecting": "Connecting",
         "status.offline": "Offline",
@@ -185,7 +203,8 @@ public enum Loc {
 
         "settings.title": "Settings",
         "settings.endpoint": "Server address",
-        "settings.endpointPlaceholder": "http://host:port/metrics",
+        "settings.flavor": "Strata installation",
+        "settings.endpointPlaceholder": "http://host:port",
         "settings.apply": "Apply",
         "settings.openBrowser": "In browser",
         "settings.interval": "Poll interval",
@@ -196,14 +215,18 @@ public enum Loc {
         "settings.launchFailed": "Failed",
 
         "setup.title": "Connect to Strata",
-        "setup.hint": "Enter the address where the Strata web UI is served. Usually http://<host-ip>:12388/metrics",
+        "setup.hint": "Enter the address where the Strata web UI is served (for example http://192.168.1.10:12387). The path is optional — the app finds the monitor endpoint on its own.",
         "setup.connect": "Connect",
         "setup.cancel": "Cancel",
-        "setup.placeholder": "http://192.168.1.10:12388/metrics",
+        "setup.placeholder": "http://192.168.1.10:12387",
 
         "menubar.format.iconAndNumber": "Icon + number",
         "menubar.format.numberOnly": "Number only",
         "menubar.format.iconOnly": "Icon only",
+
+        "flavor.automatic": "Detect automatically",
+        "flavor.sourceBuild": "Source build (git)",
+        "flavor.desktop": "Desktop application",
 
         "section.engine": "Engine",
         "section.cache": "Conversation cache",
@@ -213,6 +236,10 @@ public enum Loc {
 
         "engine.model": "model",
         "engine.version": "engine version",
+        "engine.backend": "backend",
+        "engine.quant": "quant",
+        "engine.layers": "layers",
+        "engine.host": "host",
         "engine.context": "context",
         "engine.kv": "KV",
         "engine.speculative": "speculative decoding",
@@ -237,6 +264,8 @@ public enum Loc {
         "totals.fromCache": "from cache",
         "totals.outputTokens": "output tokens",
         "totals.decodeTime": "decode time",
+        "totals.avgTps": "average speed",
+        "totals.ttft": "ttft",
         "totals.drafts": "drafts accepted",
         "totals.sessionStart": "session since",
 
@@ -253,6 +282,7 @@ public enum Loc {
         "hardware.cores": "cores",
         "hardware.pcie": "PCIe",
         "hardware.disk": "disk",
+        "hardware.diskFree": "disk free",
         "hardware.tempRange": "temp (min/max)",
         "hardware.powerRange": "power (min/max)",
         "hardware.pcieIn": "MB/s in",
@@ -261,11 +291,15 @@ public enum Loc {
         "hardware.diskWrite": "write",
         "hardware.threads": "threads",
 
-        "offline.hint": "Server is not responding. Check the address in settings (gear icon at the bottom) — usually http://<host-ip>:12388/metrics",
+        "offline.hint": "Server is not responding. Check the address in settings (gear icon at the bottom) — usually http://<host-ip>:12387",
 
         "error.timeout": "Timed out",
         "error.unreachable": "Host unreachable",
-        "error.lost": "Connection lost"
+        "error.lost": "Connection lost",
+        "error.badURL": "Invalid address:",
+        "error.badStatus": "Server replied HTTP %d",
+        "error.emptyBody": "Empty response from the server",
+        "error.noMonitor": "No monitor data on the server"
     ]
 
     /// String for a key in the given language; an unknown key is returned as is.

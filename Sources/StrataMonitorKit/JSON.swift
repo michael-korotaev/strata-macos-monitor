@@ -53,6 +53,27 @@ public struct JSON {
 
     public var isNull: Bool { value == nil || value is NSNull }
 
+    /// The key exists (and is not null).
+    public var exists: Bool { !isNull }
+
     /// Array of numbers with possible gaps (null), like in `history`.
     public var doubles: [Double?] { array.map(\.double) }
+
+    /// First value with the given key anywhere in the tree.
+    ///
+    /// A last resort for server builds whose schema we do not know yet: the
+    /// field is looked up by name, so a renamed key does not break the panel.
+    public func first(where key: String) -> JSON? {
+        if let dict = value as? [String: Any] {
+            if let found = dict[key] { return JSON(found) }
+            for nested in dict.values {
+                if let found = JSON(nested).first(where: key) { return found }
+            }
+        } else if let items = value as? [Any] {
+            for item in items {
+                if let found = JSON(item).first(where: key) { return found }
+            }
+        }
+        return nil
+    }
 }

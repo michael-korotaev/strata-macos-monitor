@@ -92,6 +92,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Polling
 
+    /// Клиент держит найденный адрес, поэтому опрос не перебирает варианты заново.
+    private var client: MetricsClient?
+    private var lastStaticFetch: Date?
+
     private func startPolling() {
         pollTask?.cancel()
         pollTask = Task { [weak self] in
@@ -110,13 +114,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             updateStatusItem()
             return
         }
+        if client?.endpoint != url || client?.flavor != model.serverFlavor {
+            client = MetricsClient(endpoint: url, flavor: model.serverFlavor)
+            lastStaticFetch = nil
+        }
+        guard let client else { return }
         do {
-            let payload = try await MetricsClient(endpoint: url).fetch()
+            let payload = try await client.fetch()
             model.apply(payload)
+            await refreshStaticIfNeeded(client)
         } catch {
             model.fail(error)
         }
         updateStatusItem()
+    }
+
+    /// Статика (имена железа, каталог моделей) меняется редко: раз в минуту.
+    private func refreshStaticIfNeeded(_ client: MetricsClient) async {
+        let now = Date()
+        if let lastStaticFetch, now.timeIntervalSince(lastStaticFetch) < 60 { return }
+        lastStaticFetch = now
+        if let info = try? await client.fetchStatic() {
+            model.applyStatic(info)
+        }
     }
 
     private func updateStatusItem() {

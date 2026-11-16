@@ -49,10 +49,14 @@ public final class MonitorModel: ObservableObject {
     @Published public private(set) var payload: MetricsPayload?
     @Published public private(set) var connection: ConnectionState = .connecting
     @Published public private(set) var lastSuccess: Date?
+    /// Static data of the modern build: hardware names and the model catalogue.
+    @Published public private(set) var staticInfo: StaticInfo?
 
     // MARK: - Settings (stored in UserDefaults)
 
-    @Published public var endpointText: String { didSet { persist() } }
+    @Published public var endpointText: String { didSet { persist(); staticInfo = nil } }
+    /// Which Strata installation is on the other side.
+    @Published public var serverFlavor: StrataFlavor { didSet { persist() } }
     @Published public var pollInterval: Double { didSet { persist() } }
     @Published public var menubarFormat: MenubarFormat { didSet { persist() } }
     @Published public var detailLevel: DetailLevel { didSet { persist() } }
@@ -66,10 +70,12 @@ public final class MonitorModel: ObservableObject {
         static let format = "menubarFormat"
         static let level = "detailLevel"
         static let language = "language"
+        static let flavor = "serverFlavor"
     }
 
-    /// Starting address: Strata listens on 12388 on localhost by default.
-    nonisolated public static let defaultEndpoint = "http://localhost:12388/metrics"
+    /// Starting address: the host where the Strata web UI is served. The path
+    /// is optional - the client looks for the monitor endpoint itself.
+    nonisolated public static let defaultEndpoint = "http://localhost:12387"
 
     public init() {
         let defaults = UserDefaults.standard
@@ -78,6 +84,7 @@ public final class MonitorModel: ObservableObject {
         menubarFormat = MenubarFormat(rawValue: defaults.string(forKey: Key.format) ?? "") ?? .iconAndNumber
         detailLevel = DetailLevel(rawValue: defaults.string(forKey: Key.level) ?? "") ?? .compact
         language = AppLanguage(rawValue: defaults.string(forKey: Key.language) ?? "") ?? .russian
+        serverFlavor = StrataFlavor(rawValue: defaults.string(forKey: Key.flavor) ?? "") ?? .automatic
     }
 
     private func persist() {
@@ -87,6 +94,7 @@ public final class MonitorModel: ObservableObject {
         defaults.set(menubarFormat.rawValue, forKey: Key.format)
         defaults.set(detailLevel.rawValue, forKey: Key.level)
         defaults.set(language.rawValue, forKey: Key.language)
+        defaults.set(serverFlavor.rawValue, forKey: Key.flavor)
     }
 
     // MARK: - Localization
@@ -121,20 +129,42 @@ public final class MonitorModel: ObservableObject {
     }
 
     public var isGenerating: Bool {
-        // The server reports states: idle / reading (prompt) / generating / loading.
+        // The server reports phases: idle / reading (prompt) / generating /
+        // loading / starting / queued. The middle ones mean the engine works.
         switch payload?.liveState {
-        case "generating", "reading", "prefill": return true
+        case "generating", "reading", "prefill", "thinking", "decision", "checkpointing":
+            return true
+        default:
+            return false
+        }
+    }
+
+    public var isLoading: Bool {
+        switch payload?.liveState {
+        case "loading", "starting": return true
         default: return false
         }
     }
 
-    public var isLoading: Bool { payload?.liveState == "loading" }
+    /// The request is waiting for the engine.
+    public var isQueued: Bool {
+        switch payload?.liveState {
+        case "queued", "waiting": return true
+        default: return false
+        }
+    }
 
-    public var modelName: String { payload?.model ?? "—" }
+    public var modelName: String {
+        if let name = staticInfo?.modelName { return name }
+        if let model = payload?.model { return model }
+        // The engine is stopped: show the model of the last request.
+        if let last = payload?.requests.first?.model { return last }
+        return "—"
+    }
 
     /// "NVIDIA GeForce RTX 4090" -> "RTX 4090" (the header has little room).
     public var shortGpuName: String? {
-        guard let gpu = payload?.gpuName else { return nil }
+        guard let gpu = staticInfo?.gpuName ?? payload?.gpuName else { return nil }
         if let range = gpu.range(of: "GeForce ") {
             return String(gpu[range.upperBound...])
         }
@@ -161,12 +191,15 @@ public final class MonitorModel: ObservableObject {
         guard let payload else { return nil }
         if isGenerating, let mean = payload.liveTPSMean, mean > 0 { return mean }
         if let mean = payload.hardwareTPSMean, mean > 0 { return mean }
-        return nil
+        // New builds have no live mean: take it from the last samples of the history.
+        let recent = payload.historyTPS.compactMap { $0 }.filter { $0 > 0 }.suffix(10)
+        guard !recent.isEmpty else { return nil }
+        return recent.reduce(0, +) / Double(recent.count)
     }
 
     public var uptimeSeconds: Double? {
         guard let since = payload?.serverSince else { return nil }
-        return Date().timeIntervalSince1970 - since
+        return Date().timeIntervalSince(since)
     }
 
     public var statusSymbol: String {
@@ -174,7 +207,7 @@ public final class MonitorModel: ObservableObject {
         case .online:
             switch payload?.liveState {
             case "generating": return "bolt.horizontal.fill"
-            case "loading": return "arrow.triangle.2.circlepath"
+            case "loading", "starting": return "arrow.triangle.2.circlepath"
             default: return "bolt.horizontal"
             }
         case .connecting:
@@ -189,8 +222,9 @@ public final class MonitorModel: ObservableObject {
         case .online:
             switch payload?.liveState {
             case "generating": return t("status.generating")
-            case "reading", "prefill": return t("status.prompt")
-            case "loading": return t("status.loading")
+            case "reading", "prefill", "thinking": return t("status.prompt")
+            case "loading", "starting": return t("status.loading")
+            case "queued", "waiting": return t("status.queued")
             default: return t("status.idle")
             }
         case .connecting:
@@ -204,11 +238,9 @@ public final class MonitorModel: ObservableObject {
     public var statusTint: StatusTint {
         switch connection {
         case .online:
-            switch payload?.liveState {
-            case "generating", "reading", "prefill": return .active
-            case "loading": return .busy
-            default: return .idle
-            }
+            if isGenerating { return .active }
+            if isLoading { return .busy }
+            return .idle
         case .connecting: return .busy
         case .offline: return .offline
         }
@@ -227,7 +259,7 @@ public final class MonitorModel: ObservableObject {
                 let unit = headlineIsPrefill ? t("unit.prefillTps") : t("unit.tps")
                 parts.append(String(format: "%.0f %@", tps, unit))
             }
-            if let gpu = payload?.gpuName { parts.append(gpu) }
+            if let gpu = staticInfo?.gpuName ?? payload?.gpuName { parts.append(gpu) }
             if let util = payload?.gpuUtil { parts.append(String(format: "GPU %.0f%%", util)) }
             return parts.joined(separator: " · ")
         }
@@ -255,6 +287,11 @@ public final class MonitorModel: ObservableObject {
         lastSuccess = Date()
     }
 
+    /// Static data of the modern build (hardware names, model catalogue).
+    public func applyStatic(_ info: StaticInfo?) {
+        staticInfo = info
+    }
+
     public func fail(_ error: Error) {
         connection = .offline(Self.describe(error, language: language))
     }
@@ -263,6 +300,9 @@ public final class MonitorModel: ObservableObject {
 
     /// Human readable description of a network error.
     nonisolated public static func describe(_ error: Error, language: AppLanguage) -> String {
+        if let clientError = error as? MetricsClient.ClientError {
+            return clientError.message(language: language)
+        }
         let nsError = error as NSError
         if nsError.domain == NSURLErrorDomain {
             switch nsError.code {

@@ -26,7 +26,7 @@ let package = Package(
             name: "StrataMonitorKitTests",
             dependencies: ["StrataMonitorKit"],
             path: "Tests/StrataMonitorKitTests",
-            resources: [.copy("Fixtures/metrics.json")],
+            resources: [.copy("Fixtures")],
             swiftSettings: [.swiftLanguageMode(.v5)]
         )
     ]

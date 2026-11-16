@@ -1,0 +1,108 @@
+{
+ "probedAt": "2026-11-16T22:06:27.315Z",
+ "host": {
+  "name": "kmn",
+  "platform": "Windows",
+  "release": "10.0.26300",
+  "arch": "x64",
+  "app": "v24.12.0"
+ },
+ "cpu": {
+  "model": "13th Gen Intel(R) Core(TM) i9-13900F",
+  "cores": 24,
+  "threads": 32,
+  "arch": "x64",
+  "ghz": 2,
+  "processors": [
+   {
+    "id": "CPU0",
+    "socket": "U3E1",
+    "model": "13th Gen Intel(R) Core(TM) i9-13900F",
+    "cores": 24,
+    "threads": 32,
+    "arch": "x64",
+    "ghz": 2
+   }
+  ],
+  "topologyKnown": true
+ },
+ "processors": [
+  {
+   "id": "CPU0",
+   "socket": "U3E1",
+   "model": "13th Gen Intel(R) Core(TM) i9-13900F",
+   "cores": 24,
+   "threads": 32,
+   "arch": "x64",
+   "ghz": 2
+  }
+ ],
+ "memory": {
+  "totalGb": 63.8,
+  "freeGb": 4,
+  "usedGb": 59.8,
+  "pressure": "high"
+ },
+ "disk": {
+  "path": "C:\\Users\\micha\\Documents\\Strata\\Models",
+  "totalGb": 930,
+  "freeGb": 439,
+  "modelsDir": "C:\\Users\\micha\\Documents\\Strata\\Models"
+ },
+ "gpus": [
+  {
+   "id": "GPU-8cb7d132-8c3e-39ab-1b0e-64c174d3ef3f",
+   "index": 0,
+   "sensorIndex": 0,
+   "busId": "00000000:01:00.0",
+   "vendor": "nvidia",
+   "name": "NVIDIA GeForce RTX 4090",
+   "vramGb": 24,
+   "unified": false,
+   "backend": "cuda",
+   "driver": "621.24"
+  }
+ ],
+ "accelerator": {
+  "backend": "cuda",
+  "label": "NVIDIA GeForce RTX 4090",
+  "usableVramGb": 24,
+  "unified": false
+ },
+ "checks": [
+  {
+   "id": "gpu",
+   "label": "GPU and driver",
+   "state": "pass",
+   "detail": "Compatible GPU found",
+   "value": "NVIDIA GeForce RTX 4090 · cuda"
+  },
+  {
+   "id": "memory",
+   "label": "System memory",
+   "state": "pass",
+   "detail": "Enough for recommended model",
+   "value": "64 GB"
+  },
+  {
+   "id": "cpu",
+   "label": "CPU",
+   "state": "pass",
+   "detail": "Supported",
+   "value": "24 cores"
+  },
+  {
+   "id": "storage",
+   "label": "Free storage",
+   "state": "pass",
+   "detail": "Space available",
+   "value": "439 GB free"
+  }
+ ],
+ "verdict": {
+  "ok": true,
+  "headline": "This computer can run Strata comfortably.",
+  "detail": "Everything needed for the recommended model is present."
+ },
+ "recommendedVariantId": "qwen3-30b-iq3xxs"
+}

@@ -8,7 +8,8 @@ import StrataMonitorKit
 // on an LSUIElement app having to activate itself on click.
 
 // Utility mode: print one metrics snapshot to stdout (decoding check, diagnostics).
-// The address can be overridden: STRATA_ENDPOINT=http://host:port/metrics ./StrataMonitor --dump
+// The address can be overridden: STRATA_ENDPOINT=http://host:12387 ./StrataMonitor --dump
+// The endpoint is found automatically, both Strata installations are supported.
 if CommandLine.arguments.contains("--dump") {
     let endpointString = ProcessInfo.processInfo.environment["STRATA_ENDPOINT"]
         ?? MonitorModel.defaultEndpoint
@@ -17,23 +18,13 @@ if CommandLine.arguments.contains("--dump") {
         exit(2)
     }
     let semaphore = DispatchSemaphore(value: 0)
-    var request = URLRequest(url: endpoint)
-    request.timeoutInterval = 5
-    URLSession.shared.dataTask(with: request) { data, response, error in
-        if let error {
-            print("error: \(MonitorModel.describe(error, language: .english))")
-            semaphore.signal()
-            return
-        }
-        guard let data else {
-            print("error: empty response")
-            semaphore.signal()
-            return
-        }
+    Task {
+        defer { semaphore.signal() }
+        let client = MetricsClient(endpoint: endpoint, flavor: .automatic)
         do {
-            let payload = MetricsPayload(root: try JSON(data: data))
-            print("endpoint:       \(endpointString)")
-            print("http status:    \((response as? HTTPURLResponse)?.statusCode.description ?? "?")")
+            let payload = try await client.fetch()
+            print("endpoint:       \(client.activeEndpoint.absoluteString)")
+            print("installation:   \(payload.isModern ? "desktop application" : "source build")")
             print("model:          \(payload.model ?? "-")")
             print("engine:         \(payload.engineVersion ?? "-")")
             print("live state:     \(payload.liveState)  phase: \(payload.livePhase ?? "-")")
@@ -54,6 +45,17 @@ if CommandLine.arguments.contains("--dump") {
             print("history tok/s:  \(payload.historyTPS.compactMap { $0 }.count) samples,"
                   + " last \(payload.historyTPS.compactMap { $0 }.last.map { String(format: "%.1f", $0) } ?? "-")")
             let rows = payload.requests
+            if let info = try? await client.fetchStatic() {
+                print("static:         gpu \(info.gpuName ?? "-")"
+                      + "  cpu \(info.cpuName ?? "-")"
+                      + "  cores \(info.cpuCores ?? 0)/\(info.cpuThreads ?? 0)"
+                      + "  backend \(info.backend ?? "-")")
+                print("model catalogue: \(info.modelName ?? "-")"
+                      + "  quant \(info.modelQuant ?? "-")"
+                      + "  ctx \(info.modelContextMax ?? 0)"
+                      + "  experts \(info.modelExperts ?? 0)"
+                      + "  kv \(info.modelKVModes.joined(separator: "/"))")
+            }
             print("requests:       \(rows.count)")
             for row in rows.prefix(3) {
                 print("   \(Format.clock(row.time))  \(Format.number(row.durationS, 1))s"
@@ -63,10 +65,9 @@ if CommandLine.arguments.contains("--dump") {
                       + "  draft \(row.draftAcceptance.map { String(format: "%.0f%%", $0 * 100) } ?? "-")")
             }
         } catch {
-            print("parse error: \(error)")
+            print("error: \(MonitorModel.describe(error, language: .english))")
         }
-        semaphore.signal()
-    }.resume()
+    }
     semaphore.wait()
     exit(0)
 }
