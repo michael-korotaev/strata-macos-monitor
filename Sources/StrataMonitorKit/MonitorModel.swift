@@ -197,6 +197,25 @@ public final class MonitorModel: ObservableObject {
         return recent.reduce(0, +) / Double(recent.count)
     }
 
+    /// Фаза текущего запроса на языке интерфейса.
+    ///
+    /// Сервер присылает фазу по-английски (`answering`, `thinking`), а панель
+    /// — на русском.
+    public var phaseLabel: String? {
+        guard let phase = payload?.livePhase, !phase.isEmpty else { return nil }
+        guard let key = Self.phaseKeys[phase.lowercased()] else { return phase }
+        return t(key)
+    }
+
+    private static let phaseKeys: [String: String] = [
+        "answering": "phase.answering",
+        "thinking": "phase.thinking",
+        "reading the prompt": "phase.reading",
+        "reading": "phase.reading",
+        "prefill": "phase.reading",
+        "decoding": "phase.answering"
+    ]
+
     public var uptimeSeconds: Double? {
         guard let since = payload?.serverSince else { return nil }
         return Date().timeIntervalSince(since)

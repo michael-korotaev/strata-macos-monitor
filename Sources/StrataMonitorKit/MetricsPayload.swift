@@ -223,6 +223,17 @@ public struct MetricsPayload {
 
     public var engineVersion: String? { root["engine"]["version"].string }
 
+    /// Quantization of the running model.
+    ///
+    /// The server does not report it separately, but the model id ends with
+    /// it: `qwen3.8-flash-next-iq3_s` -> `IQ3_S`.
+    public var modelQuant: String? {
+        guard let model, let separator = model.lastIndex(of: "-") else { return nil }
+        let tail = String(model[model.index(after: separator)...])
+        guard !tail.isEmpty, tail.count <= 8, tail.contains(where: \.isNumber) else { return nil }
+        return tail.uppercased()
+    }
+
     /// Context window of the running model.
     public var contextTokens: Int? {
         root["context"]["maxTokens"].int

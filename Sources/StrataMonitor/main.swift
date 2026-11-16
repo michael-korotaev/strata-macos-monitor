@@ -24,7 +24,10 @@ if CommandLine.arguments.contains("--dump") {
         do {
             let payload = try await client.fetch()
             print("endpoint:       \(client.activeEndpoint.absoluteString)")
-            print("installation:   \(payload.isModern ? "desktop application" : "source build")")
+            let installation = client.usesEventStream || payload.isModern
+                ? "desktop application"
+                : "source build"
+            print("installation:   \(installation)")
             print("model:          \(payload.model ?? "-")")
             print("engine:         \(payload.engineVersion ?? "-")")
             print("live state:     \(payload.liveState)  phase: \(payload.livePhase ?? "-")")
@@ -127,4 +130,5 @@ let delegate = MainActor.assumeIsolated { AppDelegate() }
 AppDelegate.shared = delegate
 application.delegate = delegate
 application.setActivationPolicy(.accessory)
+MainMenu.install()
 application.run()

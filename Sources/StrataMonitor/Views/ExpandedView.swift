@@ -83,7 +83,7 @@ struct ExpandedView: View {
         if let backend = info?.backend {
             rows.append((model.t("engine.backend"), backend.uppercased()))
         }
-        if let quant = info?.modelQuant {
+        if let quant = info?.modelQuant ?? payload?.modelQuant {
             rows.append((model.t("engine.quant"), quant))
         }
         if let context = payload?.contextTokens {
@@ -99,17 +99,35 @@ struct ExpandedView: View {
                 text += " · \(String(format: "%.0f", perToken)) KB/\(model.t("unit.tokens"))"
             }
             rows.append((model.t("engine.kv"), text))
+        } else if let kv = payload?.kvQuant, !kv.isEmpty {
+            rows.append((model.t("engine.kv"), kv))
         }
         let experts = info?.modelExperts ?? payload?.expertSlots
         if let experts, experts > 0 {
             var text = Format.integer(experts)
             if let used = payload?.expertCacheUsed, used > 0 {
                 text += " · \(used) \(model.t("engine.expertCache"))"
+            } else if let mib = payload?.expertCacheMiB, mib > 0 {
+                text += " · \(Format.integer(mib)) MiB \(model.t("engine.expertCache"))"
             }
             rows.append((model.t("engine.experts"), text))
         }
         if let layers = info?.modelLayers, layers > 0 {
             rows.append((model.t("engine.layers"), Format.integer(layers)))
+        }
+        if let spec = payload?.spec, spec > 0 {
+            var text = "\(spec)"
+            if let mtp = payload?.mtpMax, mtp > 0 { text += " · MTP \(mtp)" }
+            rows.append((model.t("engine.speculative"), text))
+        }
+        if let free = payload?.vramFreeMiB, free > 0 {
+            rows.append((model.t("engine.vramFree"), "\(Format.integer(free)) MiB"))
+        }
+        if let arena = payload?.arenaMiB, arena > 0 {
+            rows.append((model.t("engine.arena"), "\(Format.integer(arena)) MiB"))
+        }
+        if let workers = payload?.poolWorkers, workers > 0 {
+            rows.append((model.t("engine.poolWorkers"), Format.integer(workers)))
         }
         if let host = info?.hostName {
             let platform = info?.hostPlatform ?? ""

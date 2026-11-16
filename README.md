@@ -58,14 +58,13 @@ app puts the same information in the macOS menu bar and keeps it one click away.
 - A reachable Strata server. Strata is installed in two ways and each one
   exposes its metrics differently:
 
-  | Installation | Metrics endpoint | Typical port |
+  | Installation | Where the live numbers live | Typical port |
   |---|---|---|
   | Source build (`git clone`) | `GET /metrics` | 12388 |
-  | Desktop application | `GET /api/monitor` | 12387 |
+  | Desktop application | event stream `GET /api/events` (event `native`), `GET /api/monitor` as a fallback | 12387 |
 
   The app probes both, so it does not matter which one you run. See
   [Configuration](#configuration).
-  `http://<host>:<port>/metrics` (port `12388` by default).
 
 ## Install
 
@@ -110,6 +109,12 @@ the known paths on that host (`/api/monitor` for the desktop application,
 port (12387 and 12388). The address that answered is remembered, so the search
 happens only once — and again only if the server moves its endpoints.
 
+The desktop application keeps the live numbers (phase, tokens/s, the counters of
+the running request) out of its plain HTTP responses: they only come through
+the event stream `GET /api/events`, in the `native` event. The app opens that
+stream when it sees a desktop installation and falls back to plain polling if
+the stream is not there.
+
 To see what the app found, run the diagnostic mode:
 
 ```bash
@@ -121,8 +126,9 @@ readings.
 
 ## What is shown
 
-Everything comes from a single request — to `GET /metrics` for a source build
-or to `GET /api/monitor` for the desktop application:
+Everything comes from one place — `GET /metrics` for a source build, the event
+stream `GET /api/events` for the desktop application (and `GET /api/monitor`
+when the stream is not available):
 
 | Block | Used for |
 |---|---|
@@ -153,6 +159,13 @@ Network*.
 
 **The speed stays at zero.** The server only reports a speed while a request is
 being processed. Send a request to Strata and watch the menu bar.
+
+**The desktop application shows `idle` while Strata is generating.** The live
+numbers of the desktop build come from the event stream `GET /api/events`, in
+the `native` event. Run `--dump` during a request: the `live state:` line must
+change from `idle` to `generating`. If it stays `idle`, the server does not
+send that event (an older build) — then the panel shows the finished requests
+only.
 
 **The interface is empty.** Run `--dump` and look at the `installation:` line —
 it tells you which flavour the app detected. If it says `source build` but you
@@ -198,6 +211,11 @@ Both Strata installations are parsed by the same model: `MetricsPayload` reads
 the new fields first and falls back to the old ones, so a field that only one
 of the two has is simply optional. `StaticInfo` covers the desktop
 application's extra endpoints (`/api/hardware`, `/api/models`).
+
+The desktop application is read through the event stream: `EventStream` is a
+small Server-Sent Events client (`URLSessionDataDelegate`), `MetricsClient`
+opens `GET /api/events` and prefers the metrics of the engine from the `native`
+event over the flat `monitor` event.
 
 The menu bar item is drawn with AppKit (`NSStatusItem`) rather than
 `MenuBarExtra`, because a menu bar label has to combine an SF Symbol with a

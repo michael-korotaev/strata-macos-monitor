@@ -101,6 +101,7 @@ struct MenuBarPanelView: View {
                 Image(systemName: "safari")
             }
             .help(model.t("action.openBrowser"))
+            .focusEffectDisabled()
 
             Button {
                 AppDelegate.shared?.copySnapshot()
@@ -108,6 +109,7 @@ struct MenuBarPanelView: View {
                 Image(systemName: "doc.on.doc")
             }
             .help(model.t("action.copy"))
+            .focusEffectDisabled()
 
             Button {
                 withAnimation { model.showSettings.toggle() }
@@ -115,6 +117,7 @@ struct MenuBarPanelView: View {
                 Image(systemName: model.showSettings ? "chevron.left" : "gearshape")
             }
             .help(model.t("action.settings"))
+            .focusEffectDisabled()
 
             Button {
                 AppDelegate.shared?.quit()
@@ -122,6 +125,7 @@ struct MenuBarPanelView: View {
                 Image(systemName: "power")
             }
             .help(model.t("action.quit"))
+            .focusEffectDisabled()
         }
         .labelStyle(.iconOnly)
         .padding(.horizontal, 12)
@@ -153,6 +157,9 @@ struct LevelSwitch: View {
                         .contentShape(Capsule())
                 }
                 .buttonStyle(.plain)
+                // Рамка фокуса не нужна: панель открывается кнопкой меню-бара,
+                // и рамка всегда рисовалась на первой кнопке («Компактно»).
+                .focusEffectDisabled()
             }
         }
         .padding(2)

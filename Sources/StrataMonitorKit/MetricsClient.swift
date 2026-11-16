@@ -6,6 +6,12 @@ import Foundation
 /// insist on one exact URL: it remembers the address that worked and, when it
 /// stops working, looks for the monitor endpoint again - the same host on the
 /// known ports, the known paths on each of them.
+///
+/// The desktop application keeps the live numbers (phase, tokens/s, the
+/// counters of the running request) out of its HTTP responses: they only come
+/// through the event stream `GET /api/events`, in the `native` event
+/// (`instances[].metrics`). A source build has everything in `GET /metrics`,
+/// so it is polled as usual.
 public final class MetricsClient {
     public enum ClientError: LocalizedError {
         case badURL(String)
@@ -44,6 +50,9 @@ public final class MetricsClient {
     /// Ports where Strata serves its web API, tried when the given one fails.
     public static let knownPorts = [12387, 12388]
 
+    /// How long a payload may be used before it counts as stale.
+    private static let freshInterval: TimeInterval = 3
+
     public let endpoint: URL
 
     /// Which Strata installation is expected on the other side.
@@ -57,6 +66,36 @@ public final class MetricsClient {
     private var probeBlockedUntil: Date?
     private var failureCount = 0
 
+    // MARK: - Event stream
+
+    /// The stream itself.
+    private var stream: EventStream?
+    /// Reads the stream and fills the payload fields below.
+    private var streamTask: Task<Void, Never>?
+    /// `nil` - not decided yet, `true` - the event stream, `false` - plain polling.
+    private var useStream: Bool?
+
+    /// The state of the stream. It is written by the reader task and read by
+    /// the polling task, so it is guarded by a lock.
+    private let lock = NSLock()
+    private var streamState = StreamState()
+
+    /// The state of the stream.
+    private struct StreamState {
+        /// Live metrics of the engine (`native` event): the phase, the speed
+        /// and the counters of the running request.
+        var enginePayload: MetricsPayload?
+        var engineAt: Date?
+        /// State of the control layer (`monitor` event): the fallback for the
+        /// moments when the engine is stopped.
+        var monitorPayload: MetricsPayload?
+        var monitorAt: Date?
+        /// The server sent the `native` event at least once.
+        var nativeEventSeen = false
+        /// The stream was closed by the server.
+        var streamEnded = false
+    }
+
     public init(endpoint: URL, flavor: StrataFlavor = .automatic) {
         self.endpoint = endpoint
         self.flavor = flavor
@@ -64,6 +103,9 @@ public final class MetricsClient {
 
     /// Address that is currently used for polling.
     public var activeEndpoint: URL { resolved ?? endpoint }
+
+    /// The live data comes from the event stream - that is the desktop build.
+    public var usesEventStream: Bool { useStream == true }
 
     // MARK: - Fetching
 
@@ -74,14 +116,213 @@ public final class MetricsClient {
     /// probed at once: the server may live on another port or under another
     /// path, and waiting for a timeout on each of them would be slow.
     public func fetch() async throws -> MetricsPayload {
+        if flavor == .sourceBuild {
+            useStream = false
+        } else if useStream == nil {
+            // The desktop application reports the live numbers only through the
+            // event stream; a source build has no such endpoint.
+            useStream = await startStream()
+        }
+        if useStream == true {
+            // Two attempts: the first one may hit a stream closed by a restart
+            // of the server, the second one opens a fresh stream.
+            for _ in 0..<2 {
+                if let payload = try? await fetchFromStream() { return payload }
+                resetStream()
+                guard await startStream() else { break }
+            }
+            useStream = nil
+        }
+        let payload = try await fetchOverHTTP()
+        // Сервер ответил плоской схемой - значит, это desktop-сборка, а она
+        // отдаёт живые цифры только через поток событий. Если поток не
+        // открылся (сервер был выключен при старте), пробуем ещё раз.
+        if flavor == .automatic, payload.isModern, shouldRetryStream() {
+            useStream = await startStream()
+        }
+        return payload
+    }
+
+    /// Когда последний раз пробовали открыть поток.
+    private var lastStreamAttempt: Date?
+
+    /// Пора ли открыть поток ещё раз (раз в минуту).
+    private func shouldRetryStream() -> Bool {
+        guard let last = lastStreamAttempt else { return true }
+        return Date().timeIntervalSince(last) > 60
+    }
+
+    /// Static information of the desktop build: hardware names and the model
+    /// catalogue. `nil` when the server has no such endpoints.
+    public func fetchStatic() async throws -> StaticInfo? {
+        guard flavor != .sourceBuild, let root = apiRoot else { return nil }
+        async let hardware = fetchJSON(at: root.appendingPathComponent("hardware"))
+        async let models = fetchJSON(at: root.appendingPathComponent("models"))
+        let (hardwareJSON, modelsJSON) = await (hardware, models)
+        guard let hardwareJSON else { return nil }
+        return StaticInfo(hardware: hardwareJSON, models: modelsJSON)
+    }
+
+    /// Root of the REST API of the desktop build: `http://host:port/api`.
+    public var apiRoot: URL? {
+        guard var components = URLComponents(url: endpoint, resolvingAgainstBaseURL: false),
+              components.scheme != nil, components.host != nil
+        else { return nil }
+        components.path = "/api"
+        components.query = nil
+        components.fragment = nil
+        return components.url
+    }
+
+    /// URL of the event stream: `http://host:port/api/events`.
+    public var eventsURL: URL? {
+        apiRoot?.appendingPathComponent("events")
+    }
+
+    // MARK: - Event stream
+
+    /// Opens the event stream. Returns `false` when the server has no such
+    /// endpoint (that is, when it is a source build).
+    private func startStream() async -> Bool {
+        guard let url = eventsURL else { return false }
+        lastStreamAttempt = Date()
+        let stream = EventStream(url: url)
+        self.stream = stream
+        setStreamState { state in
+            state.nativeEventSeen = false
+            state.streamEnded = false
+        }
+
+        streamTask = Task { [weak self] in
+            for await event in stream.events() {
+                // Клиент мог быть освобождён (сменился адрес) - тогда поток
+                // закрываем, иначе соединение с сервером останется висеть.
+                guard let self else { return }
+                self.handle(event)
+            }
+            self?.setStreamState { $0.streamEnded = true }
+        }
+
+        // Ждём заголовки ответа: заодно выясняется, есть ли поток у сервера.
+        let headerDeadline = Date().addingTimeInterval(3)
+        while Date() < headerDeadline, stream.response == nil {
+            try? await Task.sleep(nanoseconds: 100_000_000)
+        }
+        guard stream.isEventStream else {
+            resetStream()
+            return false
+        }
+        // Первое событие `native` несёт живые метрики движка: ждём его,
+        // иначе панель покажет «idle», пока поток не наберёт следующий кадр.
+        let nativeDeadline = Date().addingTimeInterval(4)
+        while Date() < nativeDeadline {
+            if hasNativeEvent() { break }
+            try? await Task.sleep(nanoseconds: 100_000_000)
+        }
+        return true
+    }
+
+    /// Handles one event of the stream.
+    private func handle(_ event: EventStream.Event) {
+        switch event {
+        case .named("native", let json):
+            // Метрики движка: полный набор, включая живую скорость.
+            let metrics = json["instances"].array.first?["metrics"]
+            setStreamState { state in
+                state.nativeEventSeen = true
+                guard let metrics, metrics.exists else {
+                    // Движок не запущен - остаются данные слоя управления.
+                    state.enginePayload = nil
+                    state.engineAt = nil
+                    return
+                }
+                state.enginePayload = MetricsPayload(root: metrics)
+                state.engineAt = Date()
+            }
+        case .named("monitor", let json):
+            // Запасной вариант: состояние слоя управления.
+            setStreamState { state in
+                state.monitorPayload = MetricsPayload(root: json)
+                state.monitorAt = Date()
+            }
+        default:
+            break
+        }
+    }
+
+    /// The freshest payload: the metrics of the engine are preferred.
+    private func currentPayload() -> MetricsPayload? {
+        lock.lock()
+        defer { lock.unlock() }
+        let now = Date()
+        if let engine = streamState.enginePayload, let at = streamState.engineAt,
+           now.timeIntervalSince(at) < Self.freshInterval {
+            return engine
+        }
+        if let monitor = streamState.monitorPayload, let at = streamState.monitorAt,
+           now.timeIntervalSince(at) < Self.freshInterval {
+            return monitor
+        }
+        return nil
+    }
+
+    private func hasNativeEvent() -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return streamState.nativeEventSeen
+    }
+
+    private func setStreamState(_ change: (inout StreamState) -> Void) {
+        lock.lock()
+        defer { lock.unlock() }
+        change(&streamState)
+    }
+
+    /// Waits for the next payload of the stream.
+    private func fetchFromStream(timeout: TimeInterval = 4) async throws -> MetricsPayload {
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            if let payload = currentPayload() { return payload }
+            if isStreamEnded() { throw ClientError.emptyBody }
+            try? await Task.sleep(nanoseconds: 100_000_000)
+        }
+        throw ClientError.emptyBody
+    }
+
+    private func isStreamEnded() -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return streamState.streamEnded
+    }
+
+    /// Closes the stream and forgets what it brought.
+    private func resetStream() {
+        streamTask?.cancel()
+        streamTask = nil
+        stream?.stop()
+        stream = nil
+        setStreamState { state in
+            state.enginePayload = nil
+            state.engineAt = nil
+            state.monitorPayload = nil
+            state.monitorAt = nil
+            state.nativeEventSeen = false
+            state.streamEnded = false
+        }
+    }
+
+    // MARK: - Plain polling
+
+    private func fetchOverHTTP() async throws -> MetricsPayload {
         if let resolved {
             if let payload = try? await fetchPayload(at: resolved), payload.isMonitorPayload {
                 return payload
             }
             self.resolved = nil
         }
-        if let blocked = probeBlockedUntil, blocked > Date() {
-            throw ClientError.noMonitorEndpoint
+        if let payload = try? await fetchPayload(at: endpoint), payload.isMonitorPayload {
+            resolved = endpoint
+            return payload
         }
         let candidates = candidateURLs()
         var found: (url: URL, payload: MetricsPayload)?
@@ -115,30 +356,6 @@ public final class MetricsClient {
         probeBlockedUntil = nil
         return found.payload
     }
-
-    /// Static information of the desktop build: hardware names and the model
-    /// catalogue. `nil` when the server has no such endpoints.
-    public func fetchStatic() async throws -> StaticInfo? {
-        guard flavor != .sourceBuild, let root = apiRoot else { return nil }
-        async let hardware = fetchJSON(at: root.appendingPathComponent("hardware"))
-        async let models = fetchJSON(at: root.appendingPathComponent("models"))
-        let (hardwareJSON, modelsJSON) = await (hardware, models)
-        guard let hardwareJSON else { return nil }
-        return StaticInfo(hardware: hardwareJSON, models: modelsJSON)
-    }
-
-    /// Root of the REST API of the modern build: `http://host:port/api`.
-    public var apiRoot: URL? {
-        guard var components = URLComponents(url: endpoint, resolvingAgainstBaseURL: false),
-              components.scheme != nil, components.host != nil
-        else { return nil }
-        components.path = "/api"
-        components.query = nil
-        components.fragment = nil
-        return components.url
-    }
-
-    // MARK: - Candidates
 
     /// Addresses to try when the configured one does not answer with monitor data.
     func candidateURLs() -> [URL] {

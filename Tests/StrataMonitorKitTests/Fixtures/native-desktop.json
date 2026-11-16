@@ -1,0 +1,120 @@
+{
+  "available": true,
+  "version": "0.1.61",
+  "defaultId": "9ff7dd3b-776c-4dcf-8d88-b8166f2eff63",
+  "instances": [
+    {
+      "id": "9ff7dd3b-776c-4dcf-8d88-b8166f2eff63",
+      "apiModelId": "iq3_s",
+      "label": "Qwen3.8-Flash-Next",
+      "status": "ready",
+      "phase": "answering",
+      "port": 12388,
+      "gpus": ["0"],
+      "metrics": {
+        "live": {
+          "state": "generating",
+          "queued": 1,
+          "phase": "answering",
+          "prompt_tokens": 51340,
+          "prompt_read": null,
+          "prompt_total": null,
+          "generated": 5278,
+          "max_tokens": 16384,
+          "elapsed_s": 67.5,
+          "tok_s": 109.8,
+          "tok_s_mean": 104.2,
+          "prefill_tok_s_mean": 2644.8,
+          "tok_s_window_s": 2
+        },
+        "engine": {
+          "model": "qwen3.8-flash-next-iq3_s",
+          "max_context": 262144,
+          "context": 262144,
+          "kv": "int8",
+          "kv_resident": 0,
+          "expert_slots": 6156,
+          "expert_cache_mib": 11965,
+          "spec": 8,
+          "mtp_max": 6,
+          "vram_free_mib": 1694,
+          "arena_mib": 47962,
+          "pool_workers": 15,
+          "prefill_cap": 0,
+          "conversation_cache_mib": 0,
+          "conversation_cache_slots": 4,
+          "version": "0.1.60"
+        },
+        "hardware": {
+          "gpu_util": 98,
+          "gpu_mem_used": 24795525120,
+          "gpu_mem_total": 25757220864,
+          "gpu_temp": 53,
+          "gpu_power": 255.2,
+          "gpu_power_limit": 300,
+          "gpu_pcie_rx_mb": 12.5,
+          "gpu_pcie_tx_mb": 3.2,
+          "cpu": 53,
+          "ram_used": 66781890560,
+          "ram_total": 68541243396,
+          "disk_read_mb": 1.2,
+          "disk_write_mb": 0.4,
+          "tok_s": 114.1
+        },
+        "hardware_static": {
+          "gpu_name": "NVIDIA GeForce RTX 4090",
+          "gpu_count": 1,
+          "cpu_name": "13th Gen Intel(R) Core(TM) i9-13900F",
+          "cores": 24,
+          "threads": 32
+        },
+        "history": {
+          "tok_s": [106.64, 110.2, 119.06, 99.82, 122.51],
+          "gpu_temp": [51.0, 52.0, 53.0],
+          "gpu_power": [240.0, 250.0, 255.2]
+        },
+        "requests": [
+          {
+            "id": "8f746a84f2f0",
+            "time": 1794869602.2930493,
+            "duration_s": 7,
+            "finish": "length",
+            "prompt_tokens": 80,
+            "reused": 0,
+            "output_tokens": 600,
+            "first_engine_token_s": 78.256,
+            "prompt_ms": 622.2,
+            "decode_ms": 6342.7,
+            "decode_tok_s": 94.6,
+            "hit_rate": 0.844,
+            "pcie_share": 0.022,
+            "drafts_offered": 338,
+            "drafts_accepted": 238
+          }
+        ],
+        "totals": {
+          "since": 1794869172.6229765,
+          "requests": 19,
+          "prompt_tokens": 551216,
+          "reused": 170460,
+          "output_tokens": 70941,
+          "prompt_ms": 151678.3,
+          "decode_ms": 656006.9,
+          "drafts_offered": 49589,
+          "drafts_accepted": 37514
+        },
+        "conversation_cache": {
+          "source": "unavailable",
+          "enabled": true,
+          "slots": 4,
+          "parked": 0,
+          "requests": 20,
+          "requests_reused": 3,
+          "reused_tokens": 1024,
+          "prompt_tokens": 4096,
+          "evictions": 0
+        }
+      }
+    }
+  ]
+}

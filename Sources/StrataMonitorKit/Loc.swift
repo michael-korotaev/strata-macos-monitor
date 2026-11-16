@@ -50,6 +50,10 @@ public enum Loc {
         "live.elapsed": "прошло",
         "live.prefill": "prefill",
 
+        "phase.answering": "ответ",
+        "phase.thinking": "размышление",
+        "phase.reading": "чтение промпта",
+
         "level.compact": "Компактно",
         "level.expanded": "Подробно",
 
@@ -191,6 +195,10 @@ public enum Loc {
 
         "live.elapsed": "elapsed",
         "live.prefill": "prefill",
+
+        "phase.answering": "answering",
+        "phase.thinking": "thinking",
+        "phase.reading": "reading the prompt",
 
         "level.compact": "Compact",
         "level.expanded": "Detailed",

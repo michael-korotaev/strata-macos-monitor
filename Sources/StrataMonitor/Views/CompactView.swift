@@ -154,7 +154,7 @@ struct CompactView: View {
         return VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 6) {
                 Circle().fill(.green).frame(width: 6, height: 6)
-                Text(payload?.livePhase ?? model.t("speed.generating"))
+                Text(model.phaseLabel ?? model.t("speed.generating"))
                     .font(.system(size: 11, weight: .medium))
                     .lineLimit(1)
                 Spacer(minLength: 4)
