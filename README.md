@@ -221,9 +221,11 @@ The menu bar item is drawn with AppKit (`NSStatusItem`) rather than
 `MenuBarExtra`, because a menu bar label has to combine an SF Symbol with a
 monospaced number.
 
-The screenshots in `docs/` are produced by `scripts/clean-screenshot.py`: it
-cuts the popover out of a screen capture and puts it on a clean gradient, so
-no other windows leak into the picture.
+The screenshots in `docs/` are cut out of screen captures by
+`scripts/panel-shot.py`: it finds the popover by its background colour, drops the
+arrow above the top edge and cuts along the window border with rounded,
+anti-aliased corners. The PNG keeps a transparent background, so the panel is
+shown exactly as it is on screen.
 
 ## License
 
