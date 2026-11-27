@@ -28,6 +28,7 @@ if CommandLine.arguments.contains("--dump") {
                 ? "desktop application"
                 : "source build"
             print("installation:   \(installation)")
+            print("live source:    \(client.usesEventStream ? "event stream" : "polling")")
             print("model:          \(payload.model ?? "-")")
             print("engine:         \(payload.engineVersion ?? "-")")
             print("live state:     \(payload.liveState)  phase: \(payload.livePhase ?? "-")")

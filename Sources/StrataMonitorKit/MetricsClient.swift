@@ -66,6 +66,15 @@ public final class MetricsClient {
     private var probeBlockedUntil: Date?
     private var failureCount = 0
 
+    /// Origins that answered `403 bad-host`: the desktop application checks
+    /// the `Host` header and accepts only loopback names, so from now on the
+    /// requests to those origins carry `Host: localhost:<port>`.
+    private let hostLock = NSLock()
+    private var loopbackHostOrigins: Set<String> = []
+
+    /// Session for plain HTTP requests (injectable for tests).
+    private let session: URLSession
+
     // MARK: - Event stream
 
     /// The stream itself.
@@ -74,6 +83,10 @@ public final class MetricsClient {
     private var streamTask: Task<Void, Never>?
     /// `nil` - not decided yet, `true` - the event stream, `false` - plain polling.
     private var useStream: Bool?
+
+    /// The first stream attempt happens before the desktop host check is known.
+    /// After the HTTP probe learns it, the stream is retried once at once.
+    private var streamRetriedAfterHostCheck = false
 
     /// The state of the stream. It is written by the reader task and read by
     /// the polling task, so it is guarded by a lock.
@@ -96,9 +109,14 @@ public final class MetricsClient {
         var streamEnded = false
     }
 
-    public init(endpoint: URL, flavor: StrataFlavor = .automatic) {
+    public convenience init(endpoint: URL, flavor: StrataFlavor = .automatic) {
+        self.init(endpoint: endpoint, flavor: flavor, session: .shared)
+    }
+
+    init(endpoint: URL, flavor: StrataFlavor = .automatic, session: URLSession) {
         self.endpoint = endpoint
         self.flavor = flavor
+        self.session = session
     }
 
     /// Address that is currently used for polling.
@@ -137,7 +155,11 @@ public final class MetricsClient {
         // Сервер ответил плоской схемой - значит, это desktop-сборка, а она
         // отдаёт живые цифры только через поток событий. Если поток не
         // открылся (сервер был выключен при старте), пробуем ещё раз.
-        if flavor == .automatic, payload.isModern, shouldRetryStream() {
+        let hostCheckKnown = useStream == false
+            && !streamRetriedAfterHostCheck
+            && (eventsURL.map { needsLoopbackHost(for: $0) } ?? false)
+        if flavor == .automatic, payload.isModern, shouldRetryStream() || hostCheckKnown {
+            if hostCheckKnown { streamRetriedAfterHostCheck = true }
             useStream = await startStream()
         }
         return payload
@@ -186,7 +208,10 @@ public final class MetricsClient {
     private func startStream() async -> Bool {
         guard let url = eventsURL else { return false }
         lastStreamAttempt = Date()
-        let stream = EventStream(url: url)
+        // После первого `403 bad-host` поток тоже открывается с loopback-Host:
+        // проверка Strata смотрит на заголовок, а не на адрес, куда пришёл запрос.
+        let host = needsLoopbackHost(for: url) ? Self.loopbackHost(for: url) : nil
+        let stream = EventStream(url: url, hostHeader: host)
         self.stream = stream
         setStreamState { state in
             state.nativeEventSeen = false
@@ -413,9 +438,67 @@ public final class MetricsClient {
         request.timeoutInterval = timeout
         request.cachePolicy = .reloadIgnoringLocalAndRemoteCacheData
         request.setValue("application/json", forHTTPHeaderField: "Accept")
-        guard let (data, response) = try? await URLSession.shared.data(for: request) else { return nil }
-        if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) { return nil }
-        guard !data.isEmpty else { return nil }
-        return try? JSON(data: data)
+        if needsLoopbackHost(for: url), let host = Self.loopbackHost(for: url) {
+            request.setValue(host, forHTTPHeaderField: "Host")
+        }
+        guard var result = await perform(request) else { return nil }
+        // Strata Desktop 1.1: проверка Host отвечает 403 `bad-host` на любой
+        // адрес, кроме loopback. Повторяем запрос с `Host: localhost:<port>`
+        // и запоминаем, что этому серверу нужен такой заголовок.
+        if result.status == 403, Self.isBadHost(result.data), let host = Self.loopbackHost(for: url) {
+            rememberLoopbackHost(for: url)
+            request.setValue(host, forHTTPHeaderField: "Host")
+            guard let retried = await perform(request) else { return nil }
+            result = retried
+        }
+        guard (200..<300).contains(result.status), !result.data.isEmpty else { return nil }
+        return try? JSON(data: result.data)
+    }
+
+    private struct HTTPResult {
+        let status: Int
+        let data: Data
+    }
+
+    private func perform(_ request: URLRequest) async -> HTTPResult? {
+        guard let (data, response) = try? await session.data(for: request),
+              let http = response as? HTTPURLResponse
+        else { return nil }
+        return HTTPResult(status: http.statusCode, data: data)
+    }
+
+    // MARK: - Host check of the desktop build
+
+    /// The `Host` header Strata Desktop accepts for `/api/*` from another
+    /// computer. Its request guard allows only `localhost`, `127.x.x.x` and
+    /// `[::1]`, so a remote address gets `403 bad-host` even though the
+    /// request arrived at that address. `nil` when no override is needed.
+    static func loopbackHost(for url: URL) -> String? {
+        guard let host = url.host?.lowercased(), !isLoopbackName(host) else { return nil }
+        guard let port = url.port else { return "localhost" }
+        return "localhost:\(port)"
+    }
+
+    static func isLoopbackName(_ host: String) -> Bool {
+        host == "localhost" || host == "::1" || host.hasPrefix("127.")
+    }
+
+    /// The server refused the request because of the `Host` header.
+    static func isBadHost(_ data: Data) -> Bool {
+        (try? JSON(data: data))?["code"].string == "bad-host"
+    }
+
+    private func needsLoopbackHost(for url: URL) -> Bool {
+        guard let key = origin(of: url)?.absoluteString else { return false }
+        hostLock.lock()
+        defer { hostLock.unlock() }
+        return loopbackHostOrigins.contains(key)
+    }
+
+    private func rememberLoopbackHost(for url: URL) {
+        guard let key = origin(of: url)?.absoluteString else { return }
+        hostLock.lock()
+        loopbackHostOrigins.insert(key)
+        hostLock.unlock()
     }
 }

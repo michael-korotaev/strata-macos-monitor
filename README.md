@@ -152,6 +152,17 @@ loaded model.
 in the settings and that the Strata server is actually running. The address is
 the web UI address, for example `http://192.168.1.10:12387`.
 
+**After a Strata Desktop update the monitor says there is no connection, while
+`/v1` still works.** Strata Desktop 1.1 checks the `Host` header of its control
+API. From another computer `GET /api/*` answers `403 {"code":"bad-host"}`
+("Open the local Strata app to use host controls") unless the request carries a
+loopback name. The monitor recognises that answer, repeats the GET with
+`Host: localhost:<port>` and remembers it for the session — no setting is
+needed. The update does not touch the OpenAI-compatible `/v1` API on its own
+port, which is why the model keeps working. If Strata is behind a reverse proxy,
+make the proxy preserve the `Host` header, or put the public name into
+`STRATA_ALLOWED_HOSTS` on the Strata machine.
+
 **macOS asks for local network access.** Strata usually runs on another
 machine in the LAN; macOS 15+ asks for permission the first time an app talks to
 the local network. Allow it in *System Settings → Privacy & Security → Local

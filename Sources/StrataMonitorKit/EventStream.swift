@@ -16,13 +16,19 @@ public final class EventStream: NSObject, URLSessionDataDelegate {
     public private(set) var response: HTTPURLResponse?
 
     private let url: URL
+
+    /// Custom `Host` for servers that accept only a loopback name (Strata
+    /// Desktop 1.1 host check). `nil` sends the usual header.
+    private let hostHeader: String?
+
     private var continuation: AsyncStream<Event>.Continuation?
     private var text = ""
     private var session: URLSession?
     private var task: URLSessionDataTask?
 
-    public init(url: URL) {
+    public init(url: URL, hostHeader: String? = nil) {
         self.url = url
+        self.hostHeader = hostHeader
         super.init()
     }
 
@@ -40,6 +46,9 @@ public final class EventStream: NSObject, URLSessionDataDelegate {
             request.timeoutInterval = .infinity
             request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
             request.setValue("no-cache", forHTTPHeaderField: "Cache-Control")
+            if let hostHeader {
+                request.setValue(hostHeader, forHTTPHeaderField: "Host")
+            }
             let task = session.dataTask(with: request)
             self.task = task
             task.resume()
